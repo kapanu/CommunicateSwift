@@ -9,11 +9,11 @@
 import UIKit
 import WebKit
 
-class AuthenticationViewController: UIViewController {
+public class AuthenticationViewController: UIViewController {
   
   let webview = WKWebView(frame: .zero)
   
-  override func viewDidLoad() {
+  override public func viewDidLoad() {
     super.viewDidLoad()
     // Do any additional setup after loading the view.
     view.addSubview(webview)
@@ -29,7 +29,7 @@ class AuthenticationViewController: UIViewController {
 }
 
 extension AuthenticationViewController: WKNavigationDelegate {
-  func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
+  public func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
                decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
     let requestDescription = navigationAction.request.description
     
@@ -37,8 +37,7 @@ extension AuthenticationViewController: WKNavigationDelegate {
       decisionHandler(.cancel)
       if let range = requestDescription.range(of: "http://3shapecommunicate.kapanu.com/?code=") {
         let authCode = String(requestDescription[range.upperBound...])
-        UserDefaults.standard.set(authCode, forKey: "AuthCode")
-        let communicator = Communicator()
+        let communicator = Communicator.shared
         communicator.requestToken(authCode: authCode) { token in
           self.dismiss(animated: true)
         }

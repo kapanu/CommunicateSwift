@@ -6,9 +6,22 @@
 //  Copyright © 2019 Kapanu AG. All rights reserved.
 //
 
-import Foundation
+import UIKit
 
-class Communicator {
+public class Communicator {
+  public static let shared = Communicator()
+  
+  private init() {}
+  
+  public func signIn() {
+    guard let rootVC = UIApplication.shared.delegate?.window??.rootViewController else {
+      return
+    }
+    let authVC = AuthenticationViewController()
+    authVC.modalPresentationStyle = .formSheet
+    rootVC.present(authVC, animated: true)
+  }
+  
   func requestToken(authCode: String, completion: @escaping (String)->()) {
     var req = URLRequest(url: Settings.shared.tokenRequestURL)
     
@@ -32,6 +45,11 @@ class Communicator {
           if let authenticationToken = json["access_token"] as? String {
             completion(authenticationToken)
             Settings.shared.authenticationToken = authenticationToken
+          } else {
+            print("Error")
+          }
+          if let validTime = json["expires_in"] as? Int {
+            Settings.shared.tokenExpiration = Date(timeIntervalSinceNow: Double(validTime))
           } else {
             print("Error")
           }
