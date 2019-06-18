@@ -13,6 +13,8 @@ public class AuthenticationViewController: UIViewController {
   
   let webview = WKWebView(frame: .zero)
   
+  var completionCallback: ((CommunicateStatus)->())?
+  
   override public func viewDidLoad() {
     super.viewDidLoad()
     // Do any additional setup after loading the view.
@@ -40,6 +42,7 @@ extension AuthenticationViewController: WKNavigationDelegate {
         let communicator = Communicator.shared
         communicator.requestToken(authCode: authCode) { token in
           self.dismiss(animated: true)
+          self.completionCallback?(CommunicateStatus(message: "Success"))
         }
       }
       return

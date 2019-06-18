@@ -28,6 +28,10 @@ public class Settings {
     }
   }
   
+  public var isSignedIn: Bool {
+    return tokenExpiration.timeIntervalSinceNow > 0
+  }
+  
   public var tokenExpiration: Date {
     set {
       UserDefaults.standard.set(newValue, forKey: "CommunicateAuthenticationTokenExpiration")

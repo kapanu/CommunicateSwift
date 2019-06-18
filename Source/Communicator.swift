@@ -8,18 +8,58 @@
 
 import UIKit
 
+public struct CommunicateStatus {
+  let message: String
+}
+
+public protocol CommunicateObserver: class {
+  func didSignIn()
+  func didSignOut()
+}
+
+extension CommunicateObserver {
+  func didSignIn() {}
+  func didSignOut() {}
+}
+
+
 public class Communicator {
   public static let shared = Communicator()
   
   private init() {}
   
-  public func signIn() {
-    guard let rootVC = UIApplication.shared.delegate?.window??.rootViewController else {
+  private struct CommunicateObservable {
+    weak var observer: CommunicateObserver?
+  }
+  
+  private var observers = [ObjectIdentifier : CommunicateObservable]()
+  
+  public func addObserver(_ observer: CommunicateObserver) {
+    let id = ObjectIdentifier(observer)
+    observers[id] = CommunicateObservable(observer: observer)
+  }
+  private let authVC = AuthenticationViewController()
+  
+  @objc func dismissAuthenticationVC() {
+    authVC.dismiss(animated: true)
+  }
+  
+  public func signIn(completion: ((CommunicateStatus)->())? = nil) {
+    if Settings.shared.isSignedIn {
+      print(Settings.shared.authenticationToken)
+      completion?(CommunicateStatus.init(message: "AlreadySignedIn"))
       return
     }
-    let authVC = AuthenticationViewController()
-    authVC.modalPresentationStyle = .formSheet
-    rootVC.present(authVC, animated: true)
+    guard let rootVC = UIApplication.shared.delegate?.window??.rootViewController else {
+      completion?(CommunicateStatus.init(message: "Error"))
+      return
+    }
+    authVC.completionCallback = completion
+    let navVC = UINavigationController(rootViewController: authVC)
+    navVC.modalPresentationStyle = .formSheet
+    
+    authVC.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(dismissAuthenticationVC))
+    rootVC.present(navVC, animated: true)
   }
   
   func requestToken(authCode: String, completion: @escaping (String)->()) {
@@ -42,14 +82,13 @@ public class Communicator {
             return
           }
           
-          if let authenticationToken = json["access_token"] as? String {
+          if let authenticationToken = json["access_token"] as? String, let validTime = json["expires_in"] as? Int {
             completion(authenticationToken)
             Settings.shared.authenticationToken = authenticationToken
-          } else {
-            print("Error")
-          }
-          if let validTime = json["expires_in"] as? Int {
             Settings.shared.tokenExpiration = Date(timeIntervalSinceNow: Double(validTime))
+            for (_, observable) in self.observers {
+              observable.observer?.didSignIn()
+            }
           } else {
             print("Error")
           }
@@ -62,7 +101,7 @@ public class Communicator {
     task.resume()
   }
   
-  func queryCurrentUserData(completion: @escaping ([String: Any])->()) {
+  public func queryCurrentUserData(completion: @escaping (CommunicateUser)->()) {
     var req = URLRequest(url: URL(string: "https://users.3shapecommunicate.com/api/users/me")!)
     
     req.addValue("Bearer \(Settings.shared.authenticationToken)", forHTTPHeaderField: "Authorization")
@@ -70,12 +109,17 @@ public class Communicator {
     
     let sesh = URLSession(configuration: URLSessionConfiguration.default)
     let task = sesh.dataTask(with: req, completionHandler: { (data, response, error) in
+      
+      guard let data = data else {
+        return
+      }
+      
       do {
-        guard let json = try JSONSerialization.jsonObject(with: data!, options: [.allowFragments]) as? [String: Any] else {
-          return
-        }
-        completion(json)
+        let user = try JSONDecoder().decode(CommunicateUser.self, from: data)
+        completion(user)
+        return
       } catch {
+        print("Unexpected error: \(error).")
         return
       }
     })
