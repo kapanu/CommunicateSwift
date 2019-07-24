@@ -17,6 +17,7 @@ public class CommunicateUser: Codable {
   public var LastName: String
 }
 
+// Example
 /*
  {
  "Id": "d9c05478-4a77-46c2-bd1f-5e52e6b520ae",

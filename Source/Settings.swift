@@ -17,6 +17,7 @@ public class Settings {
   public var clientId: String = ""
   public var clientSecret: String = ""
   public let tokenRequestURL: URL =  URL(string: "https://identity.3shape.com/connect/token")!
+  
   // TODO: Use Keychain for token storage
   public var authenticationToken: String {
     set {
@@ -25,6 +26,16 @@ public class Settings {
 
     get {
       return UserDefaults.standard.string(forKey: "CommunicateAuthenticationToken") ?? ""
+    }
+  }
+  
+  public var refreshToken: String {
+    set {
+      UserDefaults.standard.set(newValue, forKey: "CommunicateRefreshToken")
+    }
+    
+    get {
+      return UserDefaults.standard.string(forKey: "CommunicateRefreshToken") ?? ""
     }
   }
   

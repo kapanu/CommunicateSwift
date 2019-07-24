@@ -40,9 +40,9 @@ extension AuthenticationViewController: WKNavigationDelegate {
       if let range = requestDescription.range(of: "http://3shapecommunicate.kapanu.com/?code=") {
         let authCode = String(requestDescription[range.upperBound...])
         let communicator = Communicator.shared
-        communicator.requestToken(authCode: authCode) { token in
+        communicator.requestToken(authCode: authCode) { status in
           self.dismiss(animated: true)
-          self.completionCallback?(CommunicateStatus(message: "Success"))
+          self.completionCallback?(status)
         }
       }
       return

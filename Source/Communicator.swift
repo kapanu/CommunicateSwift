@@ -8,8 +8,11 @@
 
 import UIKit
 
-public struct CommunicateStatus {
-  let message: String
+public enum CommunicateStatus {
+  case error
+  case signedIn
+  case signedOut
+  case undefined
 }
 
 public protocol CommunicateObserver: class {
@@ -47,11 +50,11 @@ public class Communicator {
   public func signIn(completion: ((CommunicateStatus)->())? = nil) {
     if Settings.shared.isSignedIn {
       print(Settings.shared.authenticationToken)
-      completion?(CommunicateStatus.init(message: "AlreadySignedIn"))
+      completion?(.signedIn)
       return
     }
     guard let rootVC = UIApplication.shared.delegate?.window??.rootViewController else {
-      completion?(CommunicateStatus.init(message: "Error"))
+      completion?(.error)
       return
     }
     authVC.completionCallback = completion
@@ -62,13 +65,15 @@ public class Communicator {
     rootVC.present(navVC, animated: true)
   }
   
-  func requestToken(authCode: String, completion: @escaping (String)->()) {
+  var authenticationString: String {
+    let authValue = "\(Settings.shared.clientId):\(Settings.shared.clientSecret)"
+    return "Basic \(authValue.data(using: .utf8)!.base64EncodedString())"
+  }
+  
+  func requestToken(authCode: String, completion: @escaping (CommunicateStatus)->()) {
     var req = URLRequest(url: Settings.shared.tokenRequestURL)
     
-    let authValue = "\(Settings.shared.clientId):\(Settings.shared.clientSecret)"
-    let authString = "Basic \(authValue.data(using: .utf8)!.base64EncodedString())"
-    
-    req.addValue(authString, forHTTPHeaderField: "Authorization")
+    req.addValue(authenticationString, forHTTPHeaderField: "Authorization")
     req.httpBody = "grant_type=authorization_code&redirect_uri=\(Settings.shared.redirectionURI)&code=\(authCode)&scope=offline_access".data(using: .utf8)
     req.httpMethod = "POST"
     
@@ -76,15 +81,24 @@ public class Communicator {
     let sesh = URLSession(configuration: URLSessionConfiguration.default)
     
     let task = sesh.dataTask(with: req, completionHandler: { (data, response, error) in
+      
+      if let error = error {
+        print(error.localizedDescription)
+        completion(.error)
+        return
+      }
+      
       if let data = data {
         do {
           guard let json = try JSONSerialization.jsonObject(with: data, options: [.allowFragments]) as? [String: Any] else {
             return
           }
           
-          if let authenticationToken = json["access_token"] as? String, let validTime = json["expires_in"] as? Int {
-            completion(authenticationToken)
+          if let authenticationToken = json["access_token"] as? String, let validTime = json["expires_in"] as? Int,
+             let refreshToken = json["refresh_token"] as? String {
+            completion(.signedIn)
             Settings.shared.authenticationToken = authenticationToken
+            Settings.shared.refreshToken = refreshToken
             Settings.shared.tokenExpiration = Date(timeIntervalSinceNow: Double(validTime))
             for (_, observable) in self.observers {
               observable.observer?.didSignIn()
@@ -94,7 +108,59 @@ public class Communicator {
           }
           
         } catch {
-          print("error")
+          print("Error")
+        }
+      }
+    })
+    task.resume()
+  }
+  
+  func refreshToken(completion: @escaping (CommunicateStatus)->()) {
+    var req = URLRequest(url: Settings.shared.tokenRequestURL)
+    
+    req.addValue(authenticationString, forHTTPHeaderField: "Authorization")
+
+    req.httpBody = "grant_type=refresh_token&refresh_token=\(Settings.shared.refreshToken)&redirect_uri=\(Settings.shared.redirectionURI)&scope=offline_access".data(using: .utf8)
+    req.httpMethod = "POST"
+    
+    print(Settings.shared.authenticationToken)
+    print(Settings.shared.refreshToken)
+    
+    let sesh = URLSession(configuration: URLSessionConfiguration.default)
+    
+    let task = sesh.dataTask(with: req, completionHandler: { (data, response, error) in
+      
+      if let error = error {
+        print(error.localizedDescription)
+        completion(.error)
+        return
+      }
+      
+      if let data = data {
+        do {
+          guard let json = try JSONSerialization.jsonObject(with: data, options: [.allowFragments]) as? [String: Any] else {
+            return
+          }
+          
+          if let authenticationToken = json["access_token"] as? String,
+            let validTime = json["expires_in"] as? Int,
+            let refreshToken = json["refresh_token"] as? String {
+            completion(.signedIn)
+            
+            Settings.shared.authenticationToken = authenticationToken
+            Settings.shared.authenticationToken = refreshToken
+            Settings.shared.tokenExpiration = Date(timeIntervalSinceNow: Double(validTime))
+            for (_, observable) in self.observers {
+              observable.observer?.didSignIn()
+            }
+          } else {
+            print(json["error"] as? String ?? "Error")
+            completion(.error)
+          }
+          
+        } catch {
+          print("Error: could not parse json")
+          completion(.error)
         }
       }
     })
