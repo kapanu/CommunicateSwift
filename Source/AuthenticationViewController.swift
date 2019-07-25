@@ -34,15 +34,15 @@ extension AuthenticationViewController: WKNavigationDelegate {
   public func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
                decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
     let requestDescription = navigationAction.request.description
-    
     if navigationAction.request.mainDocumentURL!.host!.contains("kapanu.com") {
       decisionHandler(.cancel)
       if let range = requestDescription.range(of: "http://3shapecommunicate.kapanu.com/?code=") {
         let authCode = String(requestDescription[range.upperBound...])
         let communicator = Communicator.shared
         communicator.requestToken(authCode: authCode) { status in
-          self.dismiss(animated: true)
-          self.completionCallback?(status)
+          self.dismiss(animated: true) {
+            self.completionCallback?(status)
+          }
         }
       }
       return

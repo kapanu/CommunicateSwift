@@ -41,21 +41,29 @@ public class Communicator {
     let id = ObjectIdentifier(observer)
     observers[id] = CommunicateObservable(observer: observer)
   }
-  private let authVC = AuthenticationViewController()
+  private var authVC = AuthenticationViewController()
   
   @objc func dismissAuthenticationVC() {
     authVC.dismiss(animated: true)
   }
   
-  public func signIn(completion: ((CommunicateStatus)->())? = nil) {
+  public func signIn(vc:UIViewController? = nil, completion: ((CommunicateStatus)->())? = nil) {
+    authVC = AuthenticationViewController()
     if Settings.shared.isSignedIn {
       print(Settings.shared.authenticationToken)
       completion?(.signedIn)
       return
     }
-    guard let rootVC = UIApplication.shared.delegate?.window??.rootViewController else {
-      completion?(.error)
-      return
+    var rootVC: UIViewController!
+    if (vc != nil) {
+      rootVC = vc!
+    } else {
+      if (UIApplication.shared.delegate?.window??.rootViewController != nil) {
+        rootVC = UIApplication.shared.delegate?.window??.rootViewController!
+      } else {
+        completion?(.error)
+        return
+      }
     }
     authVC.completionCallback = completion
     let navVC = UINavigationController(rootViewController: authVC)
