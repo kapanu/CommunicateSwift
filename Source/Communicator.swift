@@ -202,7 +202,6 @@ public class Communicator {
   
   public func queryCasesData(completion: @escaping (String)->()) {
     var req = URLRequest(url: URL(string: "https://users.3shapecommunicate.com/api/cases?page=0")!)
-    
     req.addValue("Bearer \(Settings.shared.authenticationToken)", forHTTPHeaderField: "Authorization")
     req.httpMethod = "GET"
     
