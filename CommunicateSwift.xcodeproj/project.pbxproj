@@ -12,7 +12,37 @@
 		3722165B22B7E33200FBC6BB /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3722165A22B7E33200FBC6BB /* Settings.swift */; };
 		372D7C3222B8C3DA002B2321 /* Communicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372D7C3122B8C3DA002B2321 /* Communicator.swift */; };
 		372D7C5C22B9145C002B2321 /* CommunicateUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372D7C5B22B9145C002B2321 /* CommunicateUser.swift */; };
+		37F81E3222F8153700F00BED /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F81E3122F8153700F00BED /* AppDelegate.swift */; };
+		37F81E3422F8153700F00BED /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F81E3322F8153700F00BED /* ViewController.swift */; };
+		37F81E3922F8153800F00BED /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 37F81E3822F8153800F00BED /* Assets.xcassets */; };
+		37F81E3C22F8153800F00BED /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 37F81E3A22F8153800F00BED /* LaunchScreen.storyboard */; };
+		37F81E4322F8176400F00BED /* Communicate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3722164C22B7E29100FBC6BB /* Communicate.framework */; };
+		37F81E4422F8176400F00BED /* Communicate.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 3722164C22B7E29100FBC6BB /* Communicate.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		37F81E4122F8175B00F00BED /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 3722164322B7E29100FBC6BB /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3722164B22B7E29100FBC6BB;
+			remoteInfo = Communicate;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		37F81E4522F8176400F00BED /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				37F81E4422F8176400F00BED /* Communicate.framework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		3722164C22B7E29100FBC6BB /* Communicate.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Communicate.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -22,6 +52,12 @@
 		3722165A22B7E33200FBC6BB /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		372D7C3122B8C3DA002B2321 /* Communicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Communicator.swift; sourceTree = "<group>"; };
 		372D7C5B22B9145C002B2321 /* CommunicateUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunicateUser.swift; sourceTree = "<group>"; };
+		37F81E2F22F8153700F00BED /* CommunicateExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CommunicateExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		37F81E3122F8153700F00BED /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		37F81E3322F8153700F00BED /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		37F81E3822F8153800F00BED /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		37F81E3B22F8153800F00BED /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		37F81E3D22F8153800F00BED /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -29,6 +65,14 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		37F81E2C22F8153700F00BED /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				37F81E4322F8176400F00BED /* Communicate.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -40,6 +84,7 @@
 			children = (
 				3722165722B7E2CC00FBC6BB /* Source */,
 				3722164E22B7E29100FBC6BB /* Resources */,
+				37F81E3022F8153700F00BED /* CommunicateExample */,
 				3722164D22B7E29100FBC6BB /* Products */,
 			);
 			sourceTree = "<group>";
@@ -48,6 +93,7 @@
 			isa = PBXGroup;
 			children = (
 				3722164C22B7E29100FBC6BB /* Communicate.framework */,
+				37F81E2F22F8153700F00BED /* CommunicateExample.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -70,6 +116,18 @@
 				372D7C5B22B9145C002B2321 /* CommunicateUser.swift */,
 			);
 			path = Source;
+			sourceTree = "<group>";
+		};
+		37F81E3022F8153700F00BED /* CommunicateExample */ = {
+			isa = PBXGroup;
+			children = (
+				37F81E3122F8153700F00BED /* AppDelegate.swift */,
+				37F81E3322F8153700F00BED /* ViewController.swift */,
+				37F81E3822F8153800F00BED /* Assets.xcassets */,
+				37F81E3A22F8153800F00BED /* LaunchScreen.storyboard */,
+				37F81E3D22F8153800F00BED /* Info.plist */,
+			);
+			path = CommunicateExample;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -104,18 +162,41 @@
 			productReference = 3722164C22B7E29100FBC6BB /* Communicate.framework */;
 			productType = "com.apple.product-type.framework";
 		};
+		37F81E2E22F8153700F00BED /* CommunicateExample */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 37F81E4022F8153800F00BED /* Build configuration list for PBXNativeTarget "CommunicateExample" */;
+			buildPhases = (
+				37F81E2B22F8153700F00BED /* Sources */,
+				37F81E2C22F8153700F00BED /* Frameworks */,
+				37F81E2D22F8153700F00BED /* Resources */,
+				37F81E4522F8176400F00BED /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				37F81E4222F8175B00F00BED /* PBXTargetDependency */,
+			);
+			name = CommunicateExample;
+			productName = CommunicateExample;
+			productReference = 37F81E2F22F8153700F00BED /* CommunicateExample.app */;
+			productType = "com.apple.product-type.application";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		3722164322B7E29100FBC6BB /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastSwiftUpdateCheck = 1030;
 				LastUpgradeCheck = 1020;
 				ORGANIZATIONNAME = "Kapanu AG";
 				TargetAttributes = {
 					3722164B22B7E29100FBC6BB = {
 						CreatedOnToolsVersion = 10.2.1;
 						LastSwiftMigration = 1020;
+					};
+					37F81E2E22F8153700F00BED = {
+						CreatedOnToolsVersion = 10.3;
 					};
 				};
 			};
@@ -125,6 +206,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = 3722164222B7E29100FBC6BB;
 			productRefGroup = 3722164D22B7E29100FBC6BB /* Products */;
@@ -132,6 +214,7 @@
 			projectRoot = "";
 			targets = (
 				3722164B22B7E29100FBC6BB /* Communicate */,
+				37F81E2E22F8153700F00BED /* CommunicateExample */,
 			);
 		};
 /* End PBXProject section */
@@ -141,6 +224,15 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		37F81E2D22F8153700F00BED /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				37F81E3C22F8153800F00BED /* LaunchScreen.storyboard in Resources */,
+				37F81E3922F8153800F00BED /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -158,7 +250,35 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		37F81E2B22F8153700F00BED /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				37F81E3422F8153700F00BED /* ViewController.swift in Sources */,
+				37F81E3222F8153700F00BED /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		37F81E4222F8175B00F00BED /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3722164B22B7E29100FBC6BB /* Communicate */;
+			targetProxy = 37F81E4122F8175B00F00BED /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		37F81E3A22F8153800F00BED /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				37F81E3B22F8153800F00BED /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		3722165222B7E29100FBC6BB /* Debug */ = {
@@ -336,6 +456,46 @@
 			};
 			name = Release;
 		};
+		37F81E3E22F8153800F00BED /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 6MQKZ27373;
+				INFOPLIST_FILE = CommunicateExample/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kapanu.CommunicateExample;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		37F81E3F22F8153800F00BED /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 6MQKZ27373;
+				INFOPLIST_FILE = CommunicateExample/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 12.4;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.kapanu.CommunicateExample;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -353,6 +513,15 @@
 			buildConfigurations = (
 				3722165522B7E29100FBC6BB /* Debug */,
 				3722165622B7E29100FBC6BB /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		37F81E4022F8153800F00BED /* Build configuration list for PBXNativeTarget "CommunicateExample" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				37F81E3E22F8153800F00BED /* Debug */,
+				37F81E3F22F8153800F00BED /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

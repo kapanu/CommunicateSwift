@@ -199,4 +199,30 @@ public class Communicator {
     })
     task.resume()
   }
+  
+  public func queryCasesData(completion: @escaping (String)->()) {
+    var req = URLRequest(url: URL(string: "https://users.3shapecommunicate.com/api/cases?page=0")!)
+    
+    req.addValue("Bearer \(Settings.shared.authenticationToken)", forHTTPHeaderField: "Authorization")
+    req.httpMethod = "GET"
+    
+    let sesh = URLSession(configuration: URLSessionConfiguration.default)
+    let task = sesh.dataTask(with: req, completionHandler: { (data, response, error) in
+      
+      guard let data = data else {
+        return
+      }
+      
+      do {
+          if let str = try JSONSerialization.jsonObject(with: data, options:.allowFragments) as? String {
+            completion(str)
+          }
+        return
+      } catch {
+        print("Unexpected error: \(error).")
+        return
+      }
+    })
+    task.resume()
+  }
 }
