@@ -123,7 +123,7 @@ public class Communicator {
     task.resume()
   }
   
-  func refreshToken(completion: @escaping (CommunicateStatus)->()) {
+  public func refreshToken(completion: @escaping (CommunicateStatus)->()) {
     var req = URLRequest(url: Settings.shared.tokenRequestURL)
     
     req.addValue(authenticationString, forHTTPHeaderField: "Authorization")
