@@ -29,6 +29,9 @@ extension CommunicateObserver {
 public class Communicator {
   public static let shared = Communicator()
   
+  public var baseMetadataURL = "https://eumetadata.3shapecommunicate.com"
+  let urlSession = URLSession(configuration: URLSessionConfiguration.default)
+  
   private init() {}
   
   private struct CommunicateObservable {
@@ -50,7 +53,7 @@ public class Communicator {
   public func signIn(vc:UIViewController? = nil, completion: ((CommunicateStatus)->())? = nil) {
     authVC = AuthenticationViewController()
     if Settings.shared.isSignedIn {
-      print(Settings.shared.authenticationToken)
+      //      print(Settings.shared.authenticationToken)
       completion?(.signedIn)
       return
     }
@@ -85,10 +88,7 @@ public class Communicator {
     req.httpBody = "grant_type=authorization_code&redirect_uri=\(Settings.shared.redirectionURI)&code=\(authCode)&scope=offline_access".data(using: .utf8)
     req.httpMethod = "POST"
     
-    
-    let sesh = URLSession(configuration: URLSessionConfiguration.default)
-    
-    let task = sesh.dataTask(with: req, completionHandler: { (data, response, error) in
+    let task = urlSession.dataTask(with: req, completionHandler: { (data, response, error) in
       
       if let error = error {
         print(error.localizedDescription)
@@ -103,7 +103,7 @@ public class Communicator {
           }
           
           if let authenticationToken = json["access_token"] as? String, let validTime = json["expires_in"] as? Int,
-             let refreshToken = json["refresh_token"] as? String {
+            let refreshToken = json["refresh_token"] as? String {
             completion(.signedIn)
             Settings.shared.authenticationToken = authenticationToken
             Settings.shared.refreshToken = refreshToken
@@ -127,16 +127,12 @@ public class Communicator {
     var req = URLRequest(url: Settings.shared.tokenRequestURL)
     
     req.addValue(authenticationString, forHTTPHeaderField: "Authorization")
-
+    
     req.httpBody = "grant_type=refresh_token&refresh_token=\(Settings.shared.refreshToken)&redirect_uri=\(Settings.shared.redirectionURI)&scope=offline_access".data(using: .utf8)
     req.httpMethod = "POST"
     
-    print(Settings.shared.authenticationToken)
-    print(Settings.shared.refreshToken)
     
-    let sesh = URLSession(configuration: URLSessionConfiguration.default)
-    
-    let task = sesh.dataTask(with: req, completionHandler: { (data, response, error) in
+    let task = urlSession.dataTask(with: req, completionHandler: { (data, response, error) in
       
       if let error = error {
         print(error.localizedDescription)
@@ -181,8 +177,7 @@ public class Communicator {
     req.addValue("Bearer \(Settings.shared.authenticationToken)", forHTTPHeaderField: "Authorization")
     req.httpMethod = "GET"
     
-    let sesh = URLSession(configuration: URLSessionConfiguration.default)
-    let task = sesh.dataTask(with: req, completionHandler: { (data, response, error) in
+    let task = urlSession.dataTask(with: req, completionHandler: { (data, response, error) in
       
       guard let data = data else {
         return
@@ -200,27 +195,44 @@ public class Communicator {
     task.resume()
   }
   
-  public func queryCasesData(completion: @escaping (String)->()) {
-    var req = URLRequest(url: URL(string: "https://users.3shapecommunicate.com/api/cases?page=0")!)
+  public func queryCasesData(completion: @escaping ([CommunicateCase])->()) {
+    var req = URLRequest(url: URL(string: baseMetadataURL + "/api/cases")!)
     req.addValue("Bearer \(Settings.shared.authenticationToken)", forHTTPHeaderField: "Authorization")
     req.httpMethod = "GET"
     
-    let sesh = URLSession(configuration: URLSessionConfiguration.default)
-    let task = sesh.dataTask(with: req, completionHandler: { (data, response, error) in
+    let task = urlSession.dataTask(with: req, completionHandler: { (data, response, error) in
       
       guard let data = data else {
         return
       }
       
       do {
-          if let str = try JSONSerialization.jsonObject(with: data, options:.allowFragments) as? String {
-            completion(str)
-          }
-        return
+        if let json = try? JSONSerialization.jsonObject(with: data, options: []) as? NSDictionary {
+          
+          guard let casesArray = json["Cases"] as? NSArray else { return }
+          
+          let jsonData = try JSONSerialization.data(withJSONObject: casesArray, options: [])
+          let cases = try JSONDecoder().decode([CommunicateCase].self, from: jsonData)
+          completion(cases)
+        }
       } catch {
         print("Unexpected error: \(error).")
         return
       }
+    })
+    task.resume()
+  }
+  
+  public func download(resource: URL, completion: @escaping (Data?)->()) {
+    if resource.baseURL?.absoluteString != baseMetadataURL {
+      completion(nil)
+      return
+    }
+    var req = URLRequest(url:resource)
+    req.addValue("Bearer \(Settings.shared.authenticationToken)", forHTTPHeaderField: "Authorization")
+    req.httpMethod = "GET"
+    let task = urlSession.dataTask(with: req, completionHandler: { (data, response, error) in
+      completion(data)
     })
     task.resume()
   }

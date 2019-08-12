@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		3704224222FD998800FE43D9 /* CommunicateCase.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3704224122FD998800FE43D9 /* CommunicateCase.swift */; };
 		3722165122B7E29100FBC6BB /* Communicate.h in Headers */ = {isa = PBXBuildFile; fileRef = 3722164F22B7E29100FBC6BB /* Communicate.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		3722165922B7E32400FBC6BB /* AuthenticationViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3722165822B7E32400FBC6BB /* AuthenticationViewController.swift */; };
 		3722165B22B7E33200FBC6BB /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3722165A22B7E33200FBC6BB /* Settings.swift */; };
@@ -45,6 +46,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		3704224122FD998800FE43D9 /* CommunicateCase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunicateCase.swift; sourceTree = "<group>"; };
 		3722164C22B7E29100FBC6BB /* Communicate.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Communicate.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		3722164F22B7E29100FBC6BB /* Communicate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Communicate.h; sourceTree = "<group>"; };
 		3722165022B7E29100FBC6BB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -113,6 +115,7 @@
 				3722165822B7E32400FBC6BB /* AuthenticationViewController.swift */,
 				3722165A22B7E33200FBC6BB /* Settings.swift */,
 				372D7C3122B8C3DA002B2321 /* Communicator.swift */,
+				3704224122FD998800FE43D9 /* CommunicateCase.swift */,
 				372D7C5B22B9145C002B2321 /* CommunicateUser.swift */,
 			);
 			path = Source;
@@ -244,6 +247,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				372D7C5C22B9145C002B2321 /* CommunicateUser.swift in Sources */,
+				3704224222FD998800FE43D9 /* CommunicateCase.swift in Sources */,
 				372D7C3222B8C3DA002B2321 /* Communicator.swift in Sources */,
 				3722165B22B7E33200FBC6BB /* Settings.swift in Sources */,
 				3722165922B7E32400FBC6BB /* AuthenticationViewController.swift in Sources */,
