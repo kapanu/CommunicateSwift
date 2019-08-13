@@ -223,6 +223,27 @@ public class Communicator {
     task.resume()
   }
   
+  public func downloadAttachments(ofCase cCase: CommunicateCase, toDirectoryURL path:URL, completion: @escaping (Bool)->()) {
+    let taskGroup = DispatchGroup()
+    var successfullyDownloadedAll = true
+    for attachement in cCase.Attachments {
+      taskGroup.enter()
+      download(resource: attachement.Href) { data in
+        let fileURL = path.appendingPathComponent(attachement.Name).appendingPathExtension(attachement.FileType)
+        do {
+          try data?.write(to: fileURL)
+          taskGroup.leave()
+        } catch {
+          successfullyDownloadedAll = false
+          taskGroup.leave()
+        }
+      }
+    }
+    taskGroup.notify(queue: DispatchQueue.main, work: DispatchWorkItem(block: {
+      completion(successfullyDownloadedAll)
+    }))
+  }
+  
   public func download(resource: URL, completion: @escaping (Data?)->()) {
     if resource.baseURL?.absoluteString != baseMetadataURL {
       completion(nil)

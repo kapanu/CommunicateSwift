@@ -97,6 +97,7 @@ class ViewController: UIViewController {
     }
     Communicator.shared.queryCasesData { data in
       print(data)
+      print(data[2].Attachments[2].Href)
     }
   }
 }
