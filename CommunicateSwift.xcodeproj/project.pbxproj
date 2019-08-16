@@ -13,6 +13,7 @@
 		3722165B22B7E33200FBC6BB /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3722165A22B7E33200FBC6BB /* Settings.swift */; };
 		372D7C3222B8C3DA002B2321 /* Communicator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372D7C3122B8C3DA002B2321 /* Communicator.swift */; };
 		372D7C5C22B9145C002B2321 /* CommunicateUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 372D7C5B22B9145C002B2321 /* CommunicateUser.swift */; };
+		3766244623053CDD001CBF94 /* CommunicateCaseModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3766244423053441001CBF94 /* CommunicateCaseModel.swift */; };
 		37F81E3222F8153700F00BED /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F81E3122F8153700F00BED /* AppDelegate.swift */; };
 		37F81E3422F8153700F00BED /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F81E3322F8153700F00BED /* ViewController.swift */; };
 		37F81E3922F8153800F00BED /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 37F81E3822F8153800F00BED /* Assets.xcassets */; };
@@ -54,6 +55,7 @@
 		3722165A22B7E33200FBC6BB /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		372D7C3122B8C3DA002B2321 /* Communicator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Communicator.swift; sourceTree = "<group>"; };
 		372D7C5B22B9145C002B2321 /* CommunicateUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunicateUser.swift; sourceTree = "<group>"; };
+		3766244423053441001CBF94 /* CommunicateCaseModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunicateCaseModel.swift; sourceTree = "<group>"; };
 		37F81E2F22F8153700F00BED /* CommunicateExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CommunicateExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		37F81E3122F8153700F00BED /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		37F81E3322F8153700F00BED /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -116,6 +118,7 @@
 				3722165A22B7E33200FBC6BB /* Settings.swift */,
 				372D7C3122B8C3DA002B2321 /* Communicator.swift */,
 				3704224122FD998800FE43D9 /* CommunicateCase.swift */,
+				3766244423053441001CBF94 /* CommunicateCaseModel.swift */,
 				372D7C5B22B9145C002B2321 /* CommunicateUser.swift */,
 			);
 			path = Source;
@@ -249,6 +252,7 @@
 				372D7C5C22B9145C002B2321 /* CommunicateUser.swift in Sources */,
 				3704224222FD998800FE43D9 /* CommunicateCase.swift in Sources */,
 				372D7C3222B8C3DA002B2321 /* Communicator.swift in Sources */,
+				3766244623053CDD001CBF94 /* CommunicateCaseModel.swift in Sources */,
 				3722165B22B7E33200FBC6BB /* Settings.swift in Sources */,
 				3722165922B7E32400FBC6BB /* AuthenticationViewController.swift in Sources */,
 			);

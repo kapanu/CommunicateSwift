@@ -30,7 +30,6 @@ public class Communicator {
   public static let shared = Communicator()
   
   public var baseMetadataURL = "https://eumetadata.3shapecommunicate.com"
-  let urlSession = URLSession(configuration: URLSessionConfiguration.default)
   
   private init() {}
   
@@ -83,12 +82,11 @@ public class Communicator {
   
   func requestToken(authCode: String, completion: @escaping (CommunicateStatus)->()) {
     var req = URLRequest(url: Settings.shared.tokenRequestURL)
-    
     req.addValue(authenticationString, forHTTPHeaderField: "Authorization")
     req.httpBody = "grant_type=authorization_code&redirect_uri=\(Settings.shared.redirectionURI)&code=\(authCode)&scope=offline_access".data(using: .utf8)
     req.httpMethod = "POST"
     
-    let task = urlSession.dataTask(with: req, completionHandler: { (data, response, error) in
+    let task = URLSession.shared.dataTask(with: req, completionHandler: { (data, response, error) in
       
       if let error = error {
         print(error.localizedDescription)
@@ -131,8 +129,7 @@ public class Communicator {
     req.httpBody = "grant_type=refresh_token&refresh_token=\(Settings.shared.refreshToken)&redirect_uri=\(Settings.shared.redirectionURI)&scope=offline_access".data(using: .utf8)
     req.httpMethod = "POST"
     
-    
-    let task = urlSession.dataTask(with: req, completionHandler: { (data, response, error) in
+    let task = URLSession.shared.dataTask(with: req, completionHandler: { (data, response, error) in
       
       if let error = error {
         print(error.localizedDescription)
@@ -177,7 +174,7 @@ public class Communicator {
     req.addValue("Bearer \(Settings.shared.authenticationToken)", forHTTPHeaderField: "Authorization")
     req.httpMethod = "GET"
     
-    let task = urlSession.dataTask(with: req, completionHandler: { (data, response, error) in
+    let task = URLSession.shared.dataTask(with: req, completionHandler: { (data, response, error) in
       
       guard let data = data else {
         return
@@ -200,7 +197,7 @@ public class Communicator {
     req.addValue("Bearer \(Settings.shared.authenticationToken)", forHTTPHeaderField: "Authorization")
     req.httpMethod = "GET"
     
-    let task = urlSession.dataTask(with: req, completionHandler: { (data, response, error) in
+    let task = URLSession.shared.dataTask(with: req, completionHandler: { (data, response, error) in
       
       guard let data = data else {
         return
@@ -226,10 +223,10 @@ public class Communicator {
   public func downloadAttachments(ofCase cCase: CommunicateCase, toDirectoryURL path:URL, completion: @escaping (Bool)->()) {
     let taskGroup = DispatchGroup()
     var successfullyDownloadedAll = true
-    for attachement in cCase.Attachments {
+    for attachement in cCase.attachments {
       taskGroup.enter()
-      download(resource: attachement.Href) { data in
-        let fileURL = path.appendingPathComponent(attachement.Name).appendingPathExtension(attachement.FileType)
+      download(resource: attachement.href) { data in
+        let fileURL = path.appendingPathComponent(attachement.name).appendingPathExtension(attachement.fileType)
         do {
           try data?.write(to: fileURL)
           taskGroup.leave()
@@ -245,15 +242,45 @@ public class Communicator {
   }
   
   public func download(resource: URL, completion: @escaping (Data?)->()) {
-    if resource.baseURL?.absoluteString != baseMetadataURL {
-      completion(nil)
-      return
-    }
     var req = URLRequest(url:resource)
     req.addValue("Bearer \(Settings.shared.authenticationToken)", forHTTPHeaderField: "Authorization")
     req.httpMethod = "GET"
-    let task = urlSession.dataTask(with: req, completionHandler: { (data, response, error) in
+    
+    let task = URLSession.shared.dataTask(with: req) { (data, response, error) in
       completion(data)
+    }
+    task.resume()
+  }
+  
+  public func download(resource: URL, toPath path:URL, completion: @escaping (URL?)->()) {
+    var req = URLRequest(url:resource)
+    req.addValue("Bearer \(Settings.shared.authenticationToken)", forHTTPHeaderField: "Authorization")
+    req.httpMethod = "GET"
+    
+    let task = URLSession.shared.downloadTask(with: req) { (storedURL, response, error) in
+      completion(storedURL)
+    }
+    task.resume()
+  }
+  
+  public func getCaseModel(forCase cCase: CommunicateCase, completion: @escaping (CommunicateCaseModel?)->()) {
+    guard let caseModelAttachement = (cCase.attachments.first {$0.name == "TreatmentSimulation-IvoSmile.json"}) else {
+      completion(nil)
+      return
+    }
+    var req = URLRequest(url: caseModelAttachement.href)
+    req.addValue("Bearer \(Settings.shared.authenticationToken)", forHTTPHeaderField: "Authorization")
+    req.httpMethod = "GET"
+    
+    let task = URLSession.shared.dataTask(with: req, completionHandler: { (data, response, error) in
+      guard let data = data else {completion(nil); return}
+      do {
+        let caseModel = try JSONDecoder().decode(CommunicateCaseModel.self, from: data)
+        completion(caseModel)
+      } catch {
+        print("Unexpected error: \(error.localizedDescription).")
+        return
+      }
     })
     task.resume()
   }
