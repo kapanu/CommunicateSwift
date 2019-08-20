@@ -64,10 +64,15 @@ class ViewController: UIViewController {
     signin.setTitle("Sign In", for: .normal)
     signin.addTarget(self, action: #selector(signIn), for: .touchDown)
     
-    let refreshBtn = UIButton(frame: CGRect(x: 99, y: 199, width: 300, height: 50))
+    let refreshBtn = UIButton(frame: CGRect(x: 399, y: 199, width: 300, height: 50))
     view.addSubview(refreshBtn)
-    refreshBtn.setTitle("Query user data and cases", for: .normal)
+    refreshBtn.setTitle("Refresh", for: .normal)
     refreshBtn.addTarget(self, action: #selector(refresh), for: .touchDown)
+    
+    let getDataBtn = UIButton(frame: CGRect(x: 99, y: 199, width: 300, height: 50))
+    view.addSubview(getDataBtn)
+    getDataBtn.setTitle("Query user data and cases", for: .normal)
+    getDataBtn.addTarget(self, action: #selector(getData), for: .touchDown)
     
     view.addSubview(nameLabel)
   }
@@ -90,6 +95,12 @@ class ViewController: UIViewController {
   }
   
   @objc func refresh() {
+    Communicator.shared.refreshToken { status in
+      print(status)
+    }
+  }
+  
+  @objc func getData() {
     Communicator.shared.queryCurrentUserData { user in
       DispatchQueue.main.async {
         self.nameLabel.text = user.Name

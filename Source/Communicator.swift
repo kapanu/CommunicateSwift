@@ -149,7 +149,7 @@ public class Communicator {
             completion(.signedIn)
             
             Settings.shared.authenticationToken = authenticationToken
-            Settings.shared.authenticationToken = refreshToken
+            Settings.shared.refreshToken = refreshToken
             Settings.shared.tokenExpiration = Date(timeIntervalSinceNow: Double(validTime))
             for (_, observable) in self.observers {
               observable.observer?.didSignIn()
