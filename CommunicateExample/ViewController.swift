@@ -95,14 +95,14 @@ class ViewController: UIViewController {
         self.nameLabel.text = user.Name
       }
     }
-    Communicator.shared.queryCasesData { data in
-      print(data)
-      let goodCase = data.first {$0.id == "056bae09-d328-4240-96b0-4d20a23dca88"}
+    Communicator.shared.retrieveCases { data in
+      let cases = try! data.get()
+      let goodCase = cases.first {$0.id == "056bae09-d328-4240-96b0-4d20a23dca88"}
       Communicator.shared.getCaseModel(forCase: goodCase!, completion: { caseModel in
         let a = caseModel!.stages.first!.getToothTransforms()
         print(a.first?.value)
       })
-      print(data[2].attachments[2].href)
+      print(cases[2].attachments[2].href)
     }
   }
 }

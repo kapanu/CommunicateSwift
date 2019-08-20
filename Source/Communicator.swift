@@ -192,13 +192,34 @@ public class Communicator {
     task.resume()
   }
   
-  public func queryCasesData(completion: @escaping ([CommunicateCase])->()) {
+  /// Retireves all Cases that are available for the logged in user
+  public func retrieveCases(completion: @escaping (Result<[CommunicateCase], Error>)->()) {
+ 
     var req = URLRequest(url: URL(string: baseMetadataURL + "/api/cases")!)
     req.addValue("Bearer \(Settings.shared.authenticationToken)", forHTTPHeaderField: "Authorization")
     req.httpMethod = "GET"
     
     let task = URLSession.shared.dataTask(with: req, completionHandler: { (data, response, error) in
-      
+      if let err = error {
+        err.localizedDescription
+        guard let resp = response as? HTTPURLResponse else { return }
+        if resp.statusCode == 401 {
+          self.signIn(vc: nil, completion: { status in
+            if status == .signedIn {
+              self.retrieveCases(completion: completion)
+            } else {
+              completion(.failure(err))
+            }
+          })
+        }
+//        do {
+//          let jsonData = try JSONSerialization.data(withJSONObject: casesArray, options: [])
+//
+//        } catch {
+//          
+//        }
+
+      }
       guard let data = data else {
         return
       }
@@ -209,8 +230,28 @@ public class Communicator {
           guard let casesArray = json["Cases"] as? NSArray else { return }
           
           let jsonData = try JSONSerialization.data(withJSONObject: casesArray, options: [])
-          let cases = try JSONDecoder().decode([CommunicateCase].self, from: jsonData)
-          completion(cases)
+          let decoder = JSONDecoder()
+          decoder.dateDecodingStrategy = .custom({ decoder -> Date in
+            let container = try decoder.singleValueContainer()
+            let dateStr = try container.decode(String.self)
+            // possible date strings: "2019-08-07T13:38:24Z", "2019-08-07T13:38:24.123Z"
+            let len = dateStr.count
+            var date: Date? = nil
+            if len == 20 {
+              date = DateFormatter.iso8601.date(from: dateStr)
+            } else {
+              date = DateFormatter.iso8601ThreeDecimal.date(from: dateStr)
+            }
+            guard let date_ = date else {
+              throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date string \(dateStr)")
+            }
+            // print("DATE DECODER \(dateStr) to \(date_)")
+            return date_
+          })
+          
+
+          let cases = try decoder.decode([CommunicateCase].self, from: jsonData)
+          completion(.success(cases))
         }
       } catch {
         print("Unexpected error: \(error).")

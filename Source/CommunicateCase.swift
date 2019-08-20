@@ -9,6 +9,26 @@
 import Foundation
 
 
+extension DateFormatter {
+  static let iso8601ThreeDecimal: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSSZ"
+    formatter.calendar = Calendar(identifier: .iso8601)
+    formatter.timeZone = TimeZone(secondsFromGMT: 0)
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    return formatter
+  }()
+  
+  static let iso8601: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
+    formatter.calendar = Calendar(identifier: .iso8601)
+    formatter.timeZone = TimeZone(secondsFromGMT: 0)
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    return formatter
+  }()
+}
+
 public class CommunicateCase: Codable {
   public class Actor: Codable {
     public var id: String
@@ -29,8 +49,8 @@ public class CommunicateCase: Codable {
     public var name: String
     public var hash: String
     public var fileType: String
-    public var created: String
-    public var updated: String
+    public var created: Date
+    public var updated: Date
     public var href: URL
     public var type: String
     
@@ -39,10 +59,10 @@ public class CommunicateCase: Codable {
       case name = "Name"
       case hash = "Hash"
       case fileType = "FileType"
-      case  created = "Created"
-      case  updated = "Updated"
-      case  href = "Href"
-      case  type = "Type"
+      case created = "Created"
+      case updated = "Updated"
+      case href = "Href"
+      case type = "Type"
     }
   }
   
@@ -65,14 +85,14 @@ public class CommunicateCase: Codable {
   public var patientName: String
   public var patient: Patient
   
-  public var created: String
-  public var updatedOn: String
-  public var receivedOn: String
+  public var created: Date
+  public var updatedOn: Date
+  public var receivedOn: Date
   public var creatorId: String
   public var state: String
   
   public var stateFlag: String?
-  public var deliveryDate: String?
+  public var deliveryDate: Date?
   public var operatorId: String?
   public var scanSource: String?
   public var application: String?
