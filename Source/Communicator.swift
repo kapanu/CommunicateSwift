@@ -157,7 +157,7 @@ public class Communicator {
   public func refreshToken(completion: @escaping (CommunicateStatus)->()) {
     var req = URLRequest(url: Settings.shared.tokenRequestURL)
     
-    req.addValue(authenticationString, forHTTPHeaderField: "Authorization")
+    req.addAuthorization()
     
     req.httpBody = "grant_type=refresh_token&refresh_token=\(Settings.shared.refreshToken)&redirect_uri=\(Settings.shared.redirectionURI)&scope=offline_access".data(using: .utf8)
     req.httpMethod = "POST"
@@ -204,8 +204,7 @@ public class Communicator {
   public func queryCurrentUserData(completion: @escaping (CommunicateUser)->()) {
     var req = URLRequest(url: URL(string: "https://users.3shapecommunicate.com/api/users/me")!)
     
-    req.addValue("Bearer \(Settings.shared.authenticationToken)", forHTTPHeaderField: "Authorization")
-    req.httpMethod = "GET"
+    req.addAuthorization()
     
     let task = URLSession.shared.dataTask(with: req, completionHandler: { (data, response, error) in
       
@@ -229,7 +228,7 @@ public class Communicator {
   public func retrieveCases(completion: @escaping (Result<[CommunicateCase], Error>)->()) {
  
     var req = URLRequest(url: URL(string: baseMetadataURL + "/api/cases")!)
-    req.addValue("Bearer \(Settings.shared.authenticationToken)", forHTTPHeaderField: "Authorization")
+    req.addAuthorization()
     req.httpMethod = "GET"
     
     let task = URLSession.shared.dataTask(with: req, completionHandler: { (data, response, error) in
@@ -317,7 +316,7 @@ public class Communicator {
   
   public func download(resource: URL, completion: @escaping (Data?)->()) {
     var req = URLRequest(url:resource)
-    req.addValue("Bearer \(Settings.shared.authenticationToken)", forHTTPHeaderField: "Authorization")
+    req.addAuthorization()
     req.httpMethod = "GET"
     
     let task = URLSession.shared.dataTask(with: req) { (data, response, error) in
@@ -328,7 +327,7 @@ public class Communicator {
   
   public func download(resource: URL, toPath path:URL, completion: @escaping (URL?)->()) {
     var req = URLRequest(url:resource)
-    req.addValue("Bearer \(Settings.shared.authenticationToken)", forHTTPHeaderField: "Authorization")
+    req.addAuthorization()
     req.httpMethod = "GET"
     
     let task = URLSession.shared.downloadTask(with: req) { (storedURL, response, error) in
@@ -343,7 +342,7 @@ public class Communicator {
       return
     }
     var req = URLRequest(url: caseModelAttachement.href)
-    req.addValue("Bearer \(Settings.shared.authenticationToken)", forHTTPHeaderField: "Authorization")
+    req.addAuthorization()
     req.httpMethod = "GET"
     
     let task = URLSession.shared.dataTask(with: req, completionHandler: { (data, response, error) in
@@ -357,5 +356,11 @@ public class Communicator {
       }
     })
     task.resume()
+  }
+}
+
+extension URLRequest {
+  mutating func addAuthorization() {
+    self.addValue("Bearer \(Settings.shared.authenticationToken)", forHTTPHeaderField: "Authorization")
   }
 }
