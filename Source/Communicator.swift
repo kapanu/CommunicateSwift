@@ -63,6 +63,9 @@ public class Communicator {
       return Settings.shared.clientSecret
     }
   }
+  
+  public var isSignedIn: Bool { return Settings.shared.isSignedIn }
+  
   private var observers = [ObjectIdentifier : CommunicateObservable]()
   
   public func addObserver(_ observer: CommunicateObserver) {
