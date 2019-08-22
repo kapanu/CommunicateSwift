@@ -112,7 +112,10 @@
 				377460A6230C24E900827E6F /* CommunicateTests */,
 				3722164D22B7E29100FBC6BB /* Products */,
 			);
+			indentWidth = 2;
 			sourceTree = "<group>";
+			tabWidth = 2;
+			usesTabs = 0;
 		};
 		3722164D22B7E29100FBC6BB /* Products */ = {
 			isa = PBXGroup;

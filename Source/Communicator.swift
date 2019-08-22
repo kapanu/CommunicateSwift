@@ -37,6 +37,32 @@ public class Communicator {
     weak var observer: CommunicateObserver?
   }
   
+  public var redirectionURI: String {
+    set {
+      Settings.shared.redirectionURI = newValue
+    }
+    get {
+      return Settings.shared.redirectionURI
+    }
+  }
+  
+  public var clientId: String {
+    set {
+      Settings.shared.clientId = newValue
+    }
+    get {
+      return Settings.shared.clientId
+    }
+  }
+  
+  public var clientSecret: String {
+    set {
+      Settings.shared.clientSecret = newValue
+    }
+    get {
+      return Settings.shared.clientSecret
+    }
+  }
   private var observers = [ObjectIdentifier : CommunicateObservable]()
   
   public func addObserver(_ observer: CommunicateObserver) {
@@ -120,6 +146,13 @@ public class Communicator {
     })
     task.resume()
   }
+  
+  public func logout() {
+    Settings.shared.refreshToken = ""
+    Settings.shared.authenticationToken = ""
+    Settings.shared.tokenExpiration = Date()
+  }
+
   
   public func refreshToken(completion: @escaping (CommunicateStatus)->()) {
     var req = URLRequest(url: Settings.shared.tokenRequestURL)

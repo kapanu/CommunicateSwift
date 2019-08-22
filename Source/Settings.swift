@@ -8,18 +8,18 @@
 
 import Foundation
 
-public class Settings {
-  public static let shared = Settings()
+class Settings {
+  static let shared = Settings()
   
   private init() {}
   
-  public var redirectionURI: String = ""
-  public var clientId: String = ""
-  public var clientSecret: String = ""
-  public let tokenRequestURL: URL =  URL(string: "https://identity.3shape.com/connect/token")!
+  var redirectionURI: String = ""
+  var clientId: String = ""
+  var clientSecret: String = ""
+  let tokenRequestURL: URL =  URL(string: "https://identity.3shape.com/connect/token")!
   
   // TODO: Use Keychain for token storage
-  public var authenticationToken: String {
+  var authenticationToken: String {
     set {
       UserDefaults.standard.set(newValue, forKey: "CommunicateAuthenticationToken")
     }
@@ -29,7 +29,7 @@ public class Settings {
     }
   }
   
-  public var refreshToken: String {
+  var refreshToken: String {
     set {
       UserDefaults.standard.set(newValue, forKey: "CommunicateRefreshToken")
     }
@@ -39,11 +39,11 @@ public class Settings {
     }
   }
   
-  public var isSignedIn: Bool {
+  var isSignedIn: Bool {
     return tokenExpiration.timeIntervalSinceNow > 0
   }
   
-  public var tokenExpiration: Date {
+  var tokenExpiration: Date {
     set {
       UserDefaults.standard.set(newValue, forKey: "CommunicateAuthenticationTokenExpiration")
     }

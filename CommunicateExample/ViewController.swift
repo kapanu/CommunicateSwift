@@ -26,21 +26,21 @@ class ViewController: UIViewController {
     super.viewDidLoad()
     
 //    view.backgroundColor = .red
-    Settings.shared.redirectionURI =  UserDefaults.standard.string(forKey: "redirectionURI") ?? ""
-    Settings.shared.clientId = UserDefaults.standard.string(forKey: "ClientID") ?? ""
-    Settings.shared.clientSecret = UserDefaults.standard.string(forKey: "clientSecret") ?? ""
+    Communicator.shared.redirectionURI =  UserDefaults.standard.string(forKey: "redirectionURI") ?? ""
+    Communicator.shared.clientId = UserDefaults.standard.string(forKey: "ClientID") ?? ""
+    Communicator.shared.clientSecret = UserDefaults.standard.string(forKey: "clientSecret") ?? ""
     
     view.addSubview(redirectionURI)
     redirectionURI.borderStyle = .roundedRect
-    redirectionURI.text = Settings.shared.redirectionURI 
+    redirectionURI.text = Communicator.shared.redirectionURI
     
     view.addSubview(clientId)
     clientId.borderStyle = .roundedRect
-    clientId.text = Settings.shared.clientId
+    clientId.text = Communicator.shared.clientId
     
     view.addSubview(clientSecret)
     clientSecret.borderStyle = .roundedRect
-    clientSecret.text = Settings.shared.clientSecret
+    clientSecret.text = Communicator.shared.clientSecret
     
     view.addSubview(redirLabel)
     redirLabel.textColor = .lightGray
@@ -78,14 +78,14 @@ class ViewController: UIViewController {
   }
   
   @objc func setCredentials() {
-    Settings.shared.redirectionURI = redirectionURI.text ?? ""
-    UserDefaults.standard.set(Settings.shared.redirectionURI, forKey: "redirectionURI")
+    Communicator.shared.redirectionURI = redirectionURI.text ?? ""
+    UserDefaults.standard.set(Communicator.shared.redirectionURI, forKey: "redirectionURI")
     
-    Settings.shared.clientId = clientId.text ?? ""
-    UserDefaults.standard.set(Settings.shared.clientId, forKey: "ClientID")
+    Communicator.shared.clientId = clientId.text ?? ""
+    UserDefaults.standard.set(Communicator.shared.clientId, forKey: "ClientID")
     
-    Settings.shared.clientSecret = clientSecret.text ?? ""
-    UserDefaults.standard.set(Settings.shared.clientSecret, forKey: "clientSecret")
+    Communicator.shared.clientSecret = clientSecret.text ?? ""
+    UserDefaults.standard.set(Communicator.shared.clientSecret, forKey: "clientSecret")
   }
   
   @objc func signIn() {
