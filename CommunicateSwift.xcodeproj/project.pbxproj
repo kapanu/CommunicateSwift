@@ -16,6 +16,7 @@
 		3766244623053CDD001CBF94 /* CommunicateCaseModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3766244423053441001CBF94 /* CommunicateCaseModel.swift */; };
 		377460A8230C24E900827E6F /* CommunicateTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 377460A7230C24E900827E6F /* CommunicateTests.swift */; };
 		377460AA230C24E900827E6F /* Communicate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3722164C22B7E29100FBC6BB /* Communicate.framework */; };
+		37C0A142230FCC9B001E854D /* Data+Decode.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37C0A141230FCC9B001E854D /* Data+Decode.swift */; };
 		37F81E3222F8153700F00BED /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F81E3122F8153700F00BED /* AppDelegate.swift */; };
 		37F81E3422F8153700F00BED /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 37F81E3322F8153700F00BED /* ViewController.swift */; };
 		37F81E3922F8153800F00BED /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 37F81E3822F8153800F00BED /* Assets.xcassets */; };
@@ -68,6 +69,7 @@
 		377460A5230C24E900827E6F /* CommunicateTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CommunicateTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		377460A7230C24E900827E6F /* CommunicateTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunicateTests.swift; sourceTree = "<group>"; };
 		377460A9230C24E900827E6F /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		37C0A141230FCC9B001E854D /* Data+Decode.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Data+Decode.swift"; sourceTree = "<group>"; };
 		37F81E2F22F8153700F00BED /* CommunicateExample.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CommunicateExample.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		37F81E3122F8153700F00BED /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		37F81E3322F8153700F00BED /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -145,6 +147,7 @@
 				3704224122FD998800FE43D9 /* CommunicateCase.swift */,
 				3766244423053441001CBF94 /* CommunicateCaseModel.swift */,
 				372D7C5B22B9145C002B2321 /* CommunicateUser.swift */,
+				37C0A141230FCC9B001E854D /* Data+Decode.swift */,
 			);
 			path = Source;
 			sourceTree = "<group>";
@@ -314,6 +317,7 @@
 			files = (
 				372D7C5C22B9145C002B2321 /* CommunicateUser.swift in Sources */,
 				3704224222FD998800FE43D9 /* CommunicateCase.swift in Sources */,
+				37C0A142230FCC9B001E854D /* Data+Decode.swift in Sources */,
 				372D7C3222B8C3DA002B2321 /* Communicator.swift in Sources */,
 				3766244623053CDD001CBF94 /* CommunicateCaseModel.swift in Sources */,
 				3722165B22B7E33200FBC6BB /* Settings.swift in Sources */,

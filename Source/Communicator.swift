@@ -265,27 +265,8 @@ public class Communicator {
           guard let casesArray = json["Cases"] as? NSArray else { return }
           
           let jsonData = try JSONSerialization.data(withJSONObject: casesArray, options: [])
-          let decoder = JSONDecoder()
-          decoder.dateDecodingStrategy = .custom({ decoder -> Date in
-            let container = try decoder.singleValueContainer()
-            let dateStr = try container.decode(String.self)
-            // possible date strings: "2019-08-07T13:38:24Z", "2019-08-07T13:38:24.123Z"
-            let len = dateStr.count
-            var date: Date? = nil
-            if len == 20 {
-              date = DateFormatter.iso8601.date(from: dateStr)
-            } else {
-              date = DateFormatter.iso8601ThreeDecimal.date(from: dateStr)
-            }
-            guard let date_ = date else {
-              throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date string \(dateStr)")
-            }
-            // print("DATE DECODER \(dateStr) to \(date_)")
-            return date_
-          })
           
-
-          let cases = try decoder.decode([CommunicateCase].self, from: jsonData)
+          let cases = try jsonData.decodeCommunicateCase()
           completion(.success(cases))
         }
       } catch {
