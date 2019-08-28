@@ -283,7 +283,12 @@ public class Communicator {
     for attachement in cCase.attachments {
       taskGroup.enter()
       download(resource: attachement.href) { data in
-        let fileURL = path.appendingPathComponent(attachement.name).appendingPathExtension(attachement.fileType)
+        // here the extension is added again though it's already appended to the name
+        // let fileURL = path.appendingPathComponent(attachement.name).appendingPathExtension(attachement.fileType)
+        let fileURL = path.appendingPathComponent(attachement.name)
+        // TODO: remove debug messages in a later commit
+        print("--- resource: attachement.href = ", attachement.href.absoluteString)
+        print("--- downloadAttachments: fileURL = ", fileURL.path)
         do {
           try data?.write(to: fileURL)
           taskGroup.leave()
@@ -326,6 +331,9 @@ public class Communicator {
       return
     }
     var req = URLRequest(url: caseModelAttachement.href)
+    // TODO: remove debug messages in a later commit
+    print("--- caseModelAttachement.name: ", caseModelAttachement.name)
+    print("--- getCaseModel: caseModelAttachement.href = ", caseModelAttachement.href.absoluteString)
     req.addAuthorization()
     req.httpMethod = "GET"
     

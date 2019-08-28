@@ -16,7 +16,7 @@ public struct CommunicateCaseModel: Codable {
     public var lowerJawGingivaId: GingivaId
     
     public struct GingivaId: Codable {
-      public var value: String
+      public var value: String?
       enum CodingKeys: String, CodingKey {
         case value = "Value"
       }
