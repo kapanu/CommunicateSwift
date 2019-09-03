@@ -64,6 +64,10 @@ public class Communicator {
     }
   }
   
+  public var identityURL: URL {
+    return Settings.shared.identityURL
+  }
+  
   public var isSignedIn: Bool { return Settings.shared.isSignedIn }
   
   private var observers = [ObjectIdentifier : CommunicateObservable]()
@@ -81,7 +85,6 @@ public class Communicator {
   public func signIn(vc:UIViewController? = nil, completion: ((CommunicateStatus)->())? = nil) {
     authVC = AuthenticationViewController()
     if Settings.shared.isSignedIn {
-      //      print(Settings.shared.authenticationToken)
       completion?(.signedIn)
       return
     }

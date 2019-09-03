@@ -25,10 +25,9 @@ class ViewController: UIViewController {
   override func viewDidLoad() {
     super.viewDidLoad()
     
-//    view.backgroundColor = .red
-    Communicator.shared.redirectionURI =  UserDefaults.standard.string(forKey: "redirectionURI") ?? ""
-    Communicator.shared.clientId = UserDefaults.standard.string(forKey: "ClientID") ?? ""
-    Communicator.shared.clientSecret = UserDefaults.standard.string(forKey: "clientSecret") ?? ""
+    Communicator.shared.redirectionURI =  UserDefaults.standard.string(forKey: "redirectionURI") ?? "https://3shapecommunicate.test.com"
+    Communicator.shared.clientId = UserDefaults.standard.string(forKey: "ClientID") ?? "IvoSmileTest"
+    Communicator.shared.clientSecret = UserDefaults.standard.string(forKey: "clientSecret") ?? "hXzoGXVDsU1yh7J7HYNR"
     
     view.addSubview(redirectionURI)
     redirectionURI.borderStyle = .roundedRect
