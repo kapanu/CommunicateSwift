@@ -68,6 +68,8 @@ public class Communicator {
   }
   
   public var isSignedIn: Bool { return Settings.shared.isSignedIn }
+  public var hasRefreshToken: Bool { return !Settings.shared.refreshToken.isEmpty }
+
   
   private var observers = [ObjectIdentifier : CommunicateObservable]()
   
