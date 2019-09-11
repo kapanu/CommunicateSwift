@@ -25,6 +25,9 @@ extension CommunicateObserver {
   func didSignOut() {}
 }
 
+public enum CommunicatorError: Error {
+  case invalidResponse
+}
 
 public class Communicator {
   public static let shared = Communicator()
@@ -250,23 +253,18 @@ public class Communicator {
 //        }
 
       }
-      guard let data = data else {
-        return
+      guard let data = data, let json = try? JSONSerialization.jsonObject(with: data, options: []) as? NSDictionary, let casesArray = json["Cases"] as? NSArray  else {
+        return completion(.failure(CommunicatorError.invalidResponse))
       }
       
       do {
-        if let json = try? JSONSerialization.jsonObject(with: data, options: []) as? NSDictionary {
-          
-          guard let casesArray = json["Cases"] as? NSArray else { return }
-          
-          let jsonData = try JSONSerialization.data(withJSONObject: casesArray, options: [])
-          
-          let cases = try jsonData.decodeCommunicateCase()
-          completion(.success(cases))
-        }
+        let jsonData = try JSONSerialization.data(withJSONObject: casesArray, options: [])        
+        let cases = try jsonData.decodeCommunicateCase()
+        completion(.success(cases))
+        
       } catch {
         print("Unexpected error: \(error).")
-        return
+        return completion(.failure(error))
       }
     })
     task.resume()
