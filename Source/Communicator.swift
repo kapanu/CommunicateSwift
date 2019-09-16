@@ -25,6 +25,9 @@ extension CommunicateObserver {
   func didSignOut() {}
 }
 
+public enum CommunicatorError: Error {
+  case invalidResponse
+}
 
 public class Communicator {
   public static let shared = Communicator()
@@ -69,6 +72,8 @@ public class Communicator {
   }
   
   public var isSignedIn: Bool { return Settings.shared.isSignedIn }
+  public var hasRefreshToken: Bool { return !Settings.shared.refreshToken.isEmpty }
+
   
   private var observers = [ObjectIdentifier : CommunicateObservable]()
   
@@ -114,7 +119,7 @@ public class Communicator {
   
   public func requestToken(authCode: String, completion: @escaping (CommunicateStatus)->()) {
     var req = URLRequest(url: Settings.shared.tokenRequestURL)
-    req.addValue(authenticationString, forHTTPHeaderField: "Authorization")
+    req.addBasicAuthorization()
     req.httpBody = "grant_type=authorization_code&redirect_uri=\(Settings.shared.redirectionURI)&code=\(authCode)&scope=offline_access".data(using: .utf8)
     req.httpMethod = "POST"
     
@@ -163,7 +168,7 @@ public class Communicator {
   public func refreshToken(completion: @escaping (CommunicateStatus)->()) {
     var req = URLRequest(url: Settings.shared.tokenRequestURL)
     
-    req.addAuthorization()
+    req.addBasicAuthorization()
     
     req.httpBody = "grant_type=refresh_token&refresh_token=\(Settings.shared.refreshToken)&redirect_uri=\(Settings.shared.redirectionURI)&scope=offline_access".data(using: .utf8)
     req.httpMethod = "POST"
@@ -185,11 +190,11 @@ public class Communicator {
           if let authenticationToken = json["access_token"] as? String,
             let validTime = json["expires_in"] as? Int,
             let refreshToken = json["refresh_token"] as? String {
-            completion(.signedIn)
             
             Settings.shared.authenticationToken = authenticationToken
             Settings.shared.refreshToken = refreshToken
             Settings.shared.tokenExpiration = Date(timeIntervalSinceNow: Double(validTime))
+            completion(.signedIn)
             for (_, observable) in self.observers {
               observable.observer?.didSignIn()
             }
@@ -210,7 +215,7 @@ public class Communicator {
   public func queryCurrentUserData(completion: @escaping (CommunicateUser)->()) {
     var req = URLRequest(url: URL(string: "https://users.3shapecommunicate.com/api/users/me")!)
     
-    req.addAuthorization()
+    req.addAccessTokenAuthorization()
     
     let task = URLSession.shared.dataTask(with: req, completionHandler: { (data, response, error) in
       
@@ -234,7 +239,7 @@ public class Communicator {
   public func retrieveCases(completion: @escaping (Result<[CommunicateCase], Error>)->()) {
  
     var req = URLRequest(url: URL(string: baseMetadataURL + "/api/cases")!)
-    req.addAuthorization()
+    req.addAccessTokenAuthorization()
     req.httpMethod = "GET"
     
     let task = URLSession.shared.dataTask(with: req, completionHandler: { (data, response, error) in
@@ -258,23 +263,18 @@ public class Communicator {
 //        }
 
       }
-      guard let data = data else {
-        return
+      guard let data = data, let json = try? JSONSerialization.jsonObject(with: data, options: []) as? NSDictionary, let casesArray = json["Cases"] as? NSArray  else {
+        return completion(.failure(CommunicatorError.invalidResponse))
       }
       
       do {
-        if let json = try? JSONSerialization.jsonObject(with: data, options: []) as? NSDictionary {
-          
-          guard let casesArray = json["Cases"] as? NSArray else { return }
-          
-          let jsonData = try JSONSerialization.data(withJSONObject: casesArray, options: [])
-          
-          let cases = try jsonData.decodeCommunicateCase()
-          completion(.success(cases))
-        }
+        let jsonData = try JSONSerialization.data(withJSONObject: casesArray, options: [])        
+        let cases = try jsonData.decodeCommunicateCase()
+        completion(.success(cases))
+        
       } catch {
         print("Unexpected error: \(error).")
-        return
+        return completion(.failure(error))
       }
     })
     task.resume()
@@ -306,9 +306,37 @@ public class Communicator {
     }))
   }
   
+  public func downloadAttachments(ofCase cCase: CommunicateCase, toDirectoryURL path:URL,
+                                  completeOne: @escaping ()->(), completion: @escaping (Bool)->()) {
+    let taskGroup = DispatchGroup()
+    var successfullyDownloadedAll = true
+    for attachement in cCase.attachments {
+      taskGroup.enter()
+      download(resource: attachement.href) { data in
+        // here the extension is added again though it's already appended to the name
+        // let fileURL = path.appendingPathComponent(attachement.name).appendingPathExtension(attachement.fileType)
+        let fileURL = path.appendingPathComponent(attachement.name)
+        // TODO: remove debug messages in a later commit
+        print("--- resource: attachement.href = ", attachement.href.absoluteString)
+        print("--- downloadAttachments: fileURL = ", fileURL.path)
+        do {
+          try data?.write(to: fileURL)
+          completeOne()
+          taskGroup.leave()
+        } catch {
+          successfullyDownloadedAll = false
+          taskGroup.leave()
+        }
+      }
+    }
+    taskGroup.notify(queue: DispatchQueue.main, work: DispatchWorkItem(block: {
+      completion(successfullyDownloadedAll)
+    }))
+  }
+  
   public func download(resource: URL, completion: @escaping (Data?)->()) {
     var req = URLRequest(url:resource)
-    req.addAuthorization()
+    req.addAccessTokenAuthorization()
     req.httpMethod = "GET"
     
     let task = URLSession.shared.dataTask(with: req) { (data, response, error) in
@@ -319,7 +347,7 @@ public class Communicator {
   
   public func download(resource: URL, toPath path:URL, completion: @escaping (URL?)->()) {
     var req = URLRequest(url:resource)
-    req.addAuthorization()
+    req.addAccessTokenAuthorization()
     req.httpMethod = "GET"
     
     let task = URLSession.shared.downloadTask(with: req) { (storedURL, response, error) in
@@ -337,7 +365,7 @@ public class Communicator {
     // TODO: remove debug messages in a later commit
     print("--- caseModelAttachement.name: ", caseModelAttachement.name)
     print("--- getCaseModel: caseModelAttachement.href = ", caseModelAttachement.href.absoluteString)
-    req.addAuthorization()
+    req.addAccessTokenAuthorization()
     req.httpMethod = "GET"
     
     let task = URLSession.shared.dataTask(with: req, completionHandler: { (data, response, error) in
@@ -355,7 +383,11 @@ public class Communicator {
 }
 
 extension URLRequest {
-  mutating func addAuthorization() {
+  mutating func addAccessTokenAuthorization() {
     self.addValue("Bearer \(Settings.shared.authenticationToken)", forHTTPHeaderField: "Authorization")
+  }
+  mutating func addBasicAuthorization() {
+    let authValue = "\(Settings.shared.clientId):\(Settings.shared.clientSecret)"
+    self.addValue("Basic \(authValue.data(using: .utf8)!.base64EncodedString())", forHTTPHeaderField: "Authorization")
   }
 }
