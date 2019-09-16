@@ -112,7 +112,7 @@ public class Communicator {
     return "Basic \(authValue.data(using: .utf8)!.base64EncodedString())"
   }
   
-  func requestToken(authCode: String, completion: @escaping (CommunicateStatus)->()) {
+  public func requestToken(authCode: String, completion: @escaping (CommunicateStatus)->()) {
     var req = URLRequest(url: Settings.shared.tokenRequestURL)
     req.addValue(authenticationString, forHTTPHeaderField: "Authorization")
     req.httpBody = "grant_type=authorization_code&redirect_uri=\(Settings.shared.redirectionURI)&code=\(authCode)&scope=offline_access".data(using: .utf8)

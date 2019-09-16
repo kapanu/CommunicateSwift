@@ -57,16 +57,14 @@ console.log('Clicked Sign in!');
     print(navigationAction.request.mainDocumentURL!)
     if navigationAction.request.mainDocumentURL!.host!.contains("test.com") {
       decisionHandler(.cancel)
-      signinExpectation.fulfill()
       if let range = requestDescription.range(of: "https://3shapecommunicate.test.com/?code=") {
         let authCode = String(requestDescription[range.upperBound...])
         let communicator = Communicator.shared
-        signinExpectation.fulfill()
-//        communicator.requestToken(authCode: authCode) { status in
-//          self.dismiss(animated: true) {
-//            self.completionCallback?(status)
-//          }
-//        }
+        communicator.requestToken(authCode: authCode) { status in
+          if status == .signedIn {
+            self.signinExpectation.fulfill()
+          }
+        }
       }
       return
     }
