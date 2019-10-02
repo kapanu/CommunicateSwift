@@ -9,7 +9,7 @@
 import Foundation
 
 extension Data {
-  public func decodeCommunicateCase() throws -> [CommunicateCase] {
+  public func decodeCommunicateCase() throws -> CommunicateCase {
     let decoder = JSONDecoder()
     decoder.dateDecodingStrategy = .custom({ decoder -> Date in
       let container = try decoder.singleValueContainer()
@@ -30,6 +30,6 @@ extension Data {
     })
     
     
-    return try decoder.decode([CommunicateCase].self, from: self)
+    return try decoder.decode(CommunicateCase.self, from: self)
   }
 }

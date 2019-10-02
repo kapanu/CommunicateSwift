@@ -259,15 +259,18 @@ public class Communicator {
         return completion(.failure(CommunicatorError.invalidResponse))
       }
       
-      do {
-        let jsonData = try JSONSerialization.data(withJSONObject: casesArray, options: [])        
-        let cases = try jsonData.decodeCommunicateCase()
-        completion(.success(cases))
-        
-      } catch {
-        print("Unexpected error: \(error).")
-        return completion(.failure(error))
+      var cases: [CommunicateCase] = []
+      for `case` in casesArray {
+        do {
+          let jsonData = try JSONSerialization.data(withJSONObject: `case`, options: [])
+          let caseThreeshape = try jsonData.decodeCommunicateCase()
+          cases.append(caseThreeshape)
+        } catch {
+          print("Unexpected error: \(error).")
+        }
       }
+      completion(.success(cases))
+
     })
     task.resume()
   }
