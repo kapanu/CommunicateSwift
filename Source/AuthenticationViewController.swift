@@ -40,8 +40,10 @@ extension AuthenticationViewController: WKNavigationDelegate {
         let authCode = String(requestDescription[range.upperBound...])
         let communicator = Communicator.shared
         communicator.requestToken(authCode: authCode) { status in
-          self.dismiss(animated: true) {
-            self.completionCallback?(status)
+          DispatchQueue.main.async {
+            self.dismiss(animated: true) {
+              self.completionCallback?(status)
+            }
           }
         }
       }
