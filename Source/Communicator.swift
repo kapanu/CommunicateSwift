@@ -155,7 +155,6 @@ public class Communicator {
     Settings.shared.authenticationToken = ""
     Settings.shared.tokenExpiration = Date()
   }
-
   
   public func refreshToken(completion: @escaping (CommunicateStatus)->()) {
     var req = URLRequest(url: Settings.shared.tokenRequestURL)
@@ -236,7 +235,6 @@ public class Communicator {
     
     let task = URLSession.shared.dataTask(with: req, completionHandler: { (data, response, error) in
       if let err = error {
-        err.localizedDescription
         guard let resp = response as? HTTPURLResponse else { return }
         if resp.statusCode == 401 {
           self.signIn(vc: nil, completion: { status in
@@ -375,6 +373,147 @@ public class Communicator {
     })
     task.resume()
   }
+  
+  public func dummyPost() {
+    // Note: test function for a "application/x-www-form-urlencoded" type POST request
+    // let url = URL(string: "https://postman-echo.com/post")!
+    let url = URL(string: "https://httpbin.org/post")!
+    var request = URLRequest(url: url)
+    // request.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+    request.httpMethod = "POST"
+    let parameters: [String: Any] = [
+        "id": 13,
+        "name": "Jack & Jill"
+    ]
+    request.httpBody = parameters.percentEscaped().data(using: .utf8)
+
+    let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        guard let data = data,
+            let response = response as? HTTPURLResponse,
+            error == nil else {                                              // check for fundamental networking error
+            print("error", error ?? "Unknown error")
+            return
+        }
+
+        guard (200 ... 299) ~= response.statusCode else {                    // check for http errors
+            print("statusCode should be 2xx, but is \(response.statusCode)")
+            print("response = \(response)")
+            return
+        }
+
+        let responseString = String(data: data, encoding: .utf8)
+        print("responseString = \(String(describing: responseString))")
+    }
+    task.resume()
+  }
+  
+  public func dummyPostMultipartForm() {
+    // Note: Current function is a skeleton to test a multipart/form-data POST request.
+    // It is successful in sending basic form data types.
+    let url = URL(string: "https://httpbin.org/post")!
+    var request = URLRequest(url: url)
+    let makeRandom = { UInt32.random(in: (.min)...(.max)) }
+    let boundary = String(format: "------------------------%08X%08X", makeRandom(), makeRandom())
+    request.setValue("multipart/form-data; boundary=" + boundary, forHTTPHeaderField: "Content-Type")
+    request.httpMethod = "POST"
+    
+    let patientDict: [String: String] = ["PatientFirstName": "PatientName", "PatientLastName": "LastName"]
+    let parameters: [String: Any] = [
+       "model": patientDict,
+       "id": 13,
+       "name": "Jack & Jill",
+       "example": "Testy test"
+    ]
+    
+    let httpBody = NSMutableData()
+    for (key, value) in parameters {
+      if (!httpBody.isEmpty) {
+        httpBody.append("\r\n".data(using: .utf8)!)
+      }
+      
+      httpBody.append("--\(boundary)\r\n".data(using: .utf8)!)
+      httpBody.append("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n".data(using: .utf8)!)
+      // httpBody.append("Content-Type: Auto\r\n\r\n".data(using: .utf8)!)
+      httpBody.append("\(value)".data(using: .utf8)!)
+    }
+    httpBody.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+    print("Data length count: ", httpBody.length)
+
+    request.setValue(String(httpBody.length), forHTTPHeaderField: "Content-Length")
+    request.httpBody = httpBody as Data
+    print(">>> request.httpBody:", String(decoding: request.httpBody!, as: UTF8.self))
+    
+    let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        guard let data = data,
+            let response = response as? HTTPURLResponse,
+            error == nil else {                                              // check for fundamental networking error
+            print("error", error ?? "Unknown error")
+            return
+        }
+
+        guard (200 ... 299) ~= response.statusCode else {                    // check for http errors
+            print("statusCode should be 2xx, but is \(response.statusCode)")
+            print("response = \(response)")
+            return
+        }
+
+        let responseString = String(data: data, encoding: .utf8)
+        print("responseString = \(String(describing: responseString))")
+    }
+    task.resume()
+  }
+  
+  public func dummy3ShapePostMultipartForm() {
+    let url = URL(string: baseMetadataURL + "/api/cases?caseType=common")!
+    var request = URLRequest(url: url)
+    request.addAccessTokenAuthorization()
+    // print(">>> Bearer \(Settings.shared.authenticationToken)") // <-- token needed to send requests via Postman
+    
+    let makeRandom = { UInt32.random(in: (.min)...(.max)) }
+    let boundary = String(format: "------------------------%08X%08X", makeRandom(), makeRandom())
+    request.setValue("multipart/form-data; boundary=" + boundary, forHTTPHeaderField: "Content-Type")
+    request.httpMethod = "POST"
+    
+    let patientDictStr: String = "{\r\nPatientFirstName: \"Lizzie\",\r\nPatientLastName: \"Queen\"\r\n}"
+    let parameters: [String: Any] = [
+       "model": patientDictStr,
+    ]
+    
+    let httpBody = NSMutableData()
+    for (key, value) in parameters {
+      if (!httpBody.isEmpty) {
+        httpBody.append("\r\n".data(using: .utf8)!)
+      }
+      
+      httpBody.append("--\(boundary)\r\n".data(using: .utf8)!)
+      httpBody.append("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n".data(using: .utf8)!)
+      // httpBody.append("Content-Type: Auto\r\n\r\n".data(using: .utf8)!) // <-- will be needed when attaching files
+      httpBody.append("\(value)".data(using: .utf8)!)
+    }
+    httpBody.append("\r\n--\(boundary)--\r\n".data(using: .utf8)!)
+
+    request.setValue(String(httpBody.length), forHTTPHeaderField: "Content-Length")
+    request.httpBody = httpBody as Data
+
+    let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        guard let data = data,
+            let response = response as? HTTPURLResponse,
+            error == nil else {                                              // check for fundamental networking error
+            print("error", error ?? "Unknown error")
+            return
+        }
+
+        guard (200 ... 299) ~= response.statusCode else {                    // check for http errors
+            print("statusCode should be 2xx, but is \(response.statusCode)")
+            print("response = \(response)")
+            return
+        }
+
+        let responseString = String(data: data, encoding: .utf8)
+        print("responseString = \(String(describing: responseString))")
+    }
+    task.resume()
+  }
 }
 
 extension URLRequest {
@@ -385,4 +524,26 @@ extension URLRequest {
     let authValue = "\(Settings.shared.clientId):\(Settings.shared.clientSecret)"
     self.addValue("Basic \(authValue.data(using: .utf8)!.base64EncodedString())", forHTTPHeaderField: "Authorization")
   }
+}
+
+extension Dictionary {
+    func percentEscaped() -> String {
+        return map { (key, value) in
+            let escapedKey = "\(key)".addingPercentEncoding(withAllowedCharacters: .urlQueryValueAllowed) ?? ""
+            let escapedValue = "\(value)".addingPercentEncoding(withAllowedCharacters: .urlQueryValueAllowed) ?? ""
+            return escapedKey + "=" + escapedValue
+        }
+        .joined(separator: "&")
+    }
+}
+
+extension CharacterSet {
+    static let urlQueryValueAllowed: CharacterSet = {
+        let generalDelimitersToEncode = ":#[]@" // does not include "?" or "/" due to RFC 3986 - Section 3.4
+        let subDelimitersToEncode = "!$&'()*+,;="
+
+        var allowed = CharacterSet.urlQueryAllowed
+        allowed.remove(charactersIn: "\(generalDelimitersToEncode)\(subDelimitersToEncode)")
+        return allowed
+    }()
 }
