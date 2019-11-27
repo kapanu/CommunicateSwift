@@ -578,6 +578,71 @@ public class Communicator {
     }
     task.resume()
   }
+  
+  public func dummy3ShapePostMultipartForm(with model: String) {
+    // Note: to be completed once model contents are successfully passed
+    let url = URL(string: baseMetadataURL + "/api/cases?caseType=common")!
+    var request = URLRequest(url: url)
+    request.addAccessTokenAuthorization()
+    // print(">>> Bearer \(Settings.shared.authenticationToken)") // <-- token needed to send requests via Postman
+    
+    let makeRandom = { UInt32.random(in: (.min)...(.max)) }
+    let boundary = String(format: "------------------------%08X%08X", makeRandom(), makeRandom())
+    request.setValue("multipart/form-data; boundary=" + boundary, forHTTPHeaderField: "Content-Type")
+    request.httpMethod = "POST"
+    
+    let patientDictStr: String = "{\r\nPatientFirstName: \"Lizzie\",\r\nPatientLastName: \"Queen\"\r\n}"
+    var parameters: [String: Any] = [
+       "model": patientDictStr,
+    ]
+//    guard let imageData = image.jpegData(compressionQuality: 1.0) else {
+//      print(">>> Getting jpeg data from image failed")
+//      return
+//    }
+//    parameters["file"] = imageData
+    
+    let httpBody = NSMutableData()
+    for (key, value) in parameters {
+      if (!httpBody.isEmpty) {
+        httpBody.append("\r\n".data(using: .utf8)!)
+      }
+      
+      httpBody.append("--\(boundary)\r\n".data(using: .utf8)!)
+      if (key == "file") {
+        httpBody.append("Content-Disposition: form-data; name=\"\(key)\"; filename=\"rendering.jpg\"\r\n".data(using: .utf8)!)
+        httpBody.append("Content-Type: image/jpg\r\n\r\n".data(using: .utf8)!)
+        httpBody.append(value as! Data)
+        httpBody.append("\r\n".data(using:. utf8)!)
+      } else {
+        httpBody.append("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n".data(using: .utf8)!)
+        httpBody.append("\(value)\r\n".data(using: .utf8)!)
+      }
+    }
+    httpBody.append("--\(boundary)--\r\n".data(using: .utf8)!)
+
+    request.setValue(String(httpBody.length), forHTTPHeaderField: "Content-Length")
+    print(">>> Content length: ", httpBody.length)
+    request.httpBody = httpBody as Data
+
+    let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        guard let data = data,
+            let response = response as? HTTPURLResponse,
+            error == nil else {                                              // check for fundamental networking error
+            print("error", error ?? "Unknown error")
+            return
+        }
+
+        guard (200 ... 299) ~= response.statusCode else {                    // check for http errors
+            print("statusCode should be 2xx, but is \(response.statusCode)")
+            print("response = \(response)")
+            return
+        }
+
+        let responseString = String(data: data, encoding: .utf8)
+        print("responseString = \(String(describing: responseString))")
+    }
+    task.resume()
+  }
 }
 
 extension URLRequest {
