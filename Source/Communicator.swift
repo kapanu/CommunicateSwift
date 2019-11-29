@@ -579,7 +579,7 @@ public class Communicator {
     task.resume()
   }
   
-  public func dummy3ShapePostMultipartForm(with model: String) {
+  public func dummy3ShapePostMultipartForm(with saveModelPath: URL) {
     // Note: to be completed once model contents are successfully passed
     let url = URL(string: baseMetadataURL + "/api/cases?caseType=common")!
     var request = URLRequest(url: url)
@@ -591,15 +591,17 @@ public class Communicator {
     request.setValue("multipart/form-data; boundary=" + boundary, forHTTPHeaderField: "Content-Type")
     request.httpMethod = "POST"
     
-    let patientDictStr: String = "{\r\nPatientFirstName: \"Lizzie\",\r\nPatientLastName: \"Queen\"\r\n}"
+    let patientDictStr: String = "{\r\nPatientFirstName: \"Tushy\",\r\nPatientLastName: \"McBootay\"\r\n}"
     var parameters: [String: Any] = [
        "model": patientDictStr,
     ]
-//    guard let imageData = image.jpegData(compressionQuality: 1.0) else {
-//      print(">>> Getting jpeg data from image failed")
-//      return
-//    }
-//    parameters["file"] = imageData
+    do {
+      let data = try Data(contentsOf: saveModelPath)
+      parameters["file"] = data
+    } catch {
+      print("Getting model data failed with error: \(error)")
+      return
+    }
     
     let httpBody = NSMutableData()
     for (key, value) in parameters {
@@ -609,8 +611,8 @@ public class Communicator {
       
       httpBody.append("--\(boundary)\r\n".data(using: .utf8)!)
       if (key == "file") {
-        httpBody.append("Content-Disposition: form-data; name=\"\(key)\"; filename=\"rendering.jpg\"\r\n".data(using: .utf8)!)
-        httpBody.append("Content-Type: image/jpg\r\n\r\n".data(using: .utf8)!)
+        httpBody.append("Content-Disposition: form-data; name=\"\(key)\"; filename=\"test.ply\"\r\n".data(using: .utf8)!)
+        httpBody.append("Content-Type: application/item3Dmodel\r\n\r\n".data(using: .utf8)!)
         httpBody.append(value as! Data)
         httpBody.append("\r\n".data(using:. utf8)!)
       } else {
