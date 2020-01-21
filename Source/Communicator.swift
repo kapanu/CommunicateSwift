@@ -661,6 +661,76 @@ public class Communicator {
     }
     task.resume()
   }
+  
+  public func exportProjectFor3Shape(zippedProjectPath: URL, patientFirstName: String = "Dummy", patientLastName: String = "McSlow", completion: @escaping (Bool) -> ()) {
+    // Note: to be completed once model contents are successfully passed
+    let url = URL(string: baseMetadataURL + "/api/cases?caseType=common")!
+    var request = URLRequest(url: url)
+    request.addAccessTokenAuthorization()
+    
+    let makeRandom = { UInt32.random(in: (.min)...(.max)) }
+    let boundary = String(format: "------------------------%08X%08X", makeRandom(), makeRandom())
+    request.setValue("multipart/form-data; boundary=" + boundary, forHTTPHeaderField: "Content-Type")
+    request.httpMethod = "POST"
+    
+    let patientDictStr: String = "{\r\nPatientFirstName: \"" + patientFirstName + "\",\r\nPatientLastName: \"" + patientLastName + "\"\r\n}"
+    var parameters: [String: Any] = [
+       "model": patientDictStr,
+    ]
+    do {
+      let data = try Data(contentsOf: zippedProjectPath)
+      parameters["file"] = data
+    } catch {
+      print("Getting zipped project data failed with error: \(error)")
+      completion(false)
+      return
+    }
+    
+    let httpBody = NSMutableData()
+    for (key, value) in parameters {
+      if (!httpBody.isEmpty) {
+        httpBody.append("\r\n".data(using: .utf8)!)
+      }
+      
+      httpBody.append("--\(boundary)\r\n".data(using: .utf8)!)
+      if (key == "file") {
+        httpBody.append("Content-Disposition: form-data; name=\"\(key)\"; filename=\"test.zip\"\r\n".data(using: .utf8)!)
+        httpBody.append("Content-Type: application/item3Dmodel\r\n\r\n".data(using: .utf8)!)
+        httpBody.append(value as! Data)
+        httpBody.append("\r\n".data(using:. utf8)!)
+      } else {
+        httpBody.append("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n".data(using: .utf8)!)
+        httpBody.append("\(value)\r\n".data(using: .utf8)!)
+      }
+    }
+    httpBody.append("--\(boundary)--\r\n".data(using: .utf8)!)
+    
+    request.setValue(String(httpBody.length), forHTTPHeaderField: "Content-Length")
+    print(">>> Content length: ", httpBody.length)
+    request.httpBody = httpBody as Data
+    
+    let task = URLSession.shared.dataTask(with: request) { data, response, error in
+      guard let data = data,
+          let response = response as? HTTPURLResponse,
+          error == nil else {                                              // check for fundamental networking error
+          print("error", error ?? "Unknown error")
+          completion(false)
+          return
+      }
+
+      guard (200 ... 299) ~= response.statusCode else {                    // check for http errors
+          print("statusCode should be 2xx, but is \(response.statusCode)")
+          print("response = \(response)")
+          completion(false)
+          return
+      }
+
+      let responseString = String(data: data, encoding: .utf8)
+      print("responseString = \(String(describing: responseString))")
+      completion(true)
+    }
+    task.resume()
+  }
 }
 
 extension URLRequest {
