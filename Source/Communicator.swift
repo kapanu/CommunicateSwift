@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import CommonCrypto
 
 public enum CommunicateStatus {
   case error
@@ -349,6 +350,15 @@ public class Communicator {
     task.resume()
   }
   
+  private func getHash(data : Data) -> String {
+    let hash = data.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) -> [UInt8] in
+        var hash = [UInt8](repeating: 0, count: Int(CC_SHA1_DIGEST_LENGTH))
+        CC_SHA1(bytes.baseAddress, CC_LONG(data.count), &hash)
+        return hash
+    }
+    return hash.map { String(format: "%02x", $0) }.joined()
+  }
+  
   public func getCaseModel(forCase cCase: CommunicateCase, completion: @escaping (CommunicateCaseModel?)->()) {
     guard let caseModelAttachement = (cCase.attachments.first {$0.name == "TreatmentSimulation-IvoSmile.json"}) else {
       completion(nil)
@@ -363,6 +373,12 @@ public class Communicator {
     
     let task = URLSession.shared.dataTask(with: req, completionHandler: { (data, response, error) in
       guard let data = data else {completion(nil); return}
+      let hashed = self.getHash(data: data)
+      if (hashed != caseModelAttachement.hash) {
+        print("Received packages contains errors!.")
+        completion(nil)
+        return
+      }
       do {
         let caseModel = try JSONDecoder().decode(CommunicateCaseModel.self, from: data)
         completion(caseModel)
