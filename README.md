@@ -5,7 +5,7 @@ Swift Wrapper for 3Shape Communicate™ API
 
 - [X] Git submodule
 - [ ] Carthage
-- [ ] Swift Package
+- [X] Swift Package
 
 ## Usage
 
