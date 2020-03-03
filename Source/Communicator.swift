@@ -308,11 +308,7 @@ public class Communicator {
       taskGroup.enter()
       download(resource: attachement.href) { data in
         // here the extension is added again though it's already appended to the name
-        // let fileURL = path.appendingPathComponent(attachement.name).appendingPathExtension(attachement.fileType)
         let fileURL = path.appendingPathComponent(attachement.name)
-        // TODO: remove debug messages in a later commit
-        print("--- resource: attachement.href = ", attachement.href.absoluteString)
-        print("--- downloadAttachments: fileURL = ", fileURL.path)
         do {
           try data?.write(to: fileURL)
           completeOne()
@@ -320,6 +316,58 @@ public class Communicator {
         } catch {
           successfullyDownloadedAll = false
           taskGroup.leave()
+        }
+      }
+    }
+    taskGroup.notify(queue: DispatchQueue.main, work: DispatchWorkItem(block: {
+      completion(successfullyDownloadedAll)
+    }))
+  }
+  
+  public func downloadScans(ofCase cCase: CommunicateCase, toDirectoryURL path:URL,
+                            completeOne: @escaping ()->(), completion: @escaping (Bool)->()) {
+    let taskGroup = DispatchGroup()
+    var successfullyDownloadedAll = true
+    for (index, scan) in cCase.scans.enumerated() {
+      taskGroup.enter()
+      if let scanURL = scan.href, let scanType = scan.fileType {
+        download(resource: scanURL) { data in
+          let scanId: String = scan.id ?? String(index)
+          let fileURL = path.appendingPathComponent(scanId + "." + scanType)
+          do {
+            try data?.write(to: fileURL)
+            completeOne()
+            taskGroup.leave()
+          } catch {
+            successfullyDownloadedAll = false
+            taskGroup.leave()
+          }
+        }
+      }
+    }
+    taskGroup.notify(queue: DispatchQueue.main, work: DispatchWorkItem(block: {
+      completion(successfullyDownloadedAll)
+    }))
+  }
+  
+  public func downloadDesigns(ofCase cCase: CommunicateCase, toDirectoryURL path:URL,
+                              completeOne: @escaping ()->(), completion: @escaping (Bool)->()) {
+    let taskGroup = DispatchGroup()
+    var successfullyDownloadedAll = true
+    for (index, design) in cCase.designs.enumerated() {
+      taskGroup.enter()
+      if let designURL = design.href, let designType = design.fileType {
+        download(resource: designURL) { data in
+          let designId: String = design.id ?? String(index)
+          let fileURL = path.appendingPathComponent(designId + "." + designType)
+          do {
+            try data?.write(to: fileURL)
+            completeOne()
+            taskGroup.leave()
+          } catch {
+            successfullyDownloadedAll = false
+            taskGroup.leave()
+          }
         }
       }
     }
