@@ -14,10 +14,12 @@ extension Data {
     decoder.dateDecodingStrategy = .custom({ decoder -> Date in
       let container = try decoder.singleValueContainer()
       let dateStr = try container.decode(String.self)
-      // possible date strings: "2019-08-07T13:38:24Z", "2019-08-07T13:38:24.123Z"
+      // possible date strings: "2019-08-07T13:38:24Z", "2019-08-07T13:38:24", "2019-08-07T13:38:24.123Z"
       let len = dateStr.count
       var date: Date? = nil
-      if len == 20 {
+      if len == 19 {
+        date = DateFormatter.iso8601withoutZ.date(from: dateStr)
+      } else if len == 20 {
         date = DateFormatter.iso8601.date(from: dateStr)
       } else {
         date = DateFormatter.iso8601ThreeDecimal.date(from: dateStr)
