@@ -27,6 +27,15 @@ extension DateFormatter {
     formatter.locale = Locale(identifier: "en_US_POSIX")
     return formatter
   }()
+  
+  static let iso8601withoutZ: DateFormatter = {
+    let formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+    formatter.calendar = Calendar(identifier: .iso8601)
+    formatter.timeZone = TimeZone(secondsFromGMT: 0)
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    return formatter
+  }()
 }
 
 public class CommunicateCase: Codable {
@@ -68,7 +77,7 @@ public class CommunicateCase: Codable {
   
   public class Patient: Codable {
     public var firstName: String
-    public var lastName: String
+    public var lastName: String?
     public var externalId: String?
     public var refererenceNumber: String?
     
@@ -77,6 +86,94 @@ public class CommunicateCase: Codable {
       case lastName = "LastName"
       case externalId = "ExternalId"
       case refererenceNumber = "PatientRefNo"
+    }
+  }
+  
+  public class ModelElement: Codable {
+    public class Restoration: Codable {
+      public var globalImplantConnectionId: String?
+      public var implantDiameter: String?
+      public var unn: String?
+      public var implantManufacturer: String?
+      public var practiceRestorationType: String?
+      public var implantLength: String?
+      public var restorationType: String?
+      public var implantPlatformType: String?
+      public var implantSystem: String?
+      
+      enum CodingKeys: String, CodingKey {
+        case globalImplantConnectionId = "GlobalImplantConnectionId"
+        case implantDiameter = "ImplantDiameter"
+        case unn = "Unn"
+        case implantManufacturer = "ImplantManufacturer"
+        case practiceRestorationType = "PracticeRestorationType"
+        case implantLength = "ImplantLength"
+        case restorationType = "RestorationType"
+        case implantPlatformType = "ImplantPlatformType"
+        case implantSystem = "ImplantSystem"
+      }
+    }
+    
+    public var bridgeType: String?
+    public var restorations: [Restoration]
+    public var modelElementIndex: String?
+    public var ponticBaseShape: String?
+    public var shade: String?
+    public var processStatus: String?
+    public var materialDisplayName: String?
+    public var preparationLineFileName: String?
+    public var shadeDisplayName: String?
+    public var deliveryDate: Date?
+    public var material: String?
+    
+    enum CodingKeys: String, CodingKey {
+      case bridgeType = "BridgeType"
+      case restorations = "Restorations"
+      case modelElementIndex = "ModelElementIndex"
+      case ponticBaseShape = "PonticBaseShape"
+      case shade = "Shade"
+      case processStatus = "ProcessStatus"
+      case materialDisplayName = "MaterialDisplayName"
+      case preparationLineFileName = "PreparationLineFileName"
+      case shadeDisplayName = "ShadeDisplayName"
+      case deliveryDate = "DeliveryDate"
+      case material = "Material"
+    }
+  }
+  
+  public class Scan: Codable {
+    public var id: String?
+    public var href: URL?
+    public var fileType: String?
+    public var scanTimestamp: String?
+    public var jawType: String?
+    public var type: String?
+    public var hash: String?
+    
+    enum CodingKeys: String, CodingKey {
+      case id = "Id"
+      case href = "Href"
+      case fileType = "FileType"
+      case scanTimestamp = "ScanTimestamp"
+      case jawType = "JawType"
+      case type = "Type"
+      case hash = "Hash"
+    }
+  }
+  
+  public class Design: Codable {
+    public var hash: String?
+    public var type: String?
+    public var href: URL?
+    public var fileType: String?
+    public var id: String?
+    
+    enum CodingKeys: String, CodingKey {
+      case hash = "Hash"
+      case type = "Type"
+      case href = "Href"
+      case fileType = "FileType"
+      case id = "Id"
     }
   }
   
@@ -102,9 +199,9 @@ public class CommunicateCase: Codable {
   public var actors: [Actor]
   public var attachments: [Attachment]
   public var comments: [String]
-  public var modelElements: [String]
-  public var scans: [String]
-  public var designs: [String]
+  public var modelElements: [ModelElement]
+  public var scans: [Scan]
+  public var designs: [Design]
   
   enum CodingKeys: String, CodingKey {
     case id = "Id"
