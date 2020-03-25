@@ -246,13 +246,6 @@ public class Communicator {
             }
           })
         }
-//        do {
-//          let jsonData = try JSONSerialization.data(withJSONObject: casesArray, options: [])
-//
-//        } catch {
-//          
-//        }
-
       }
       guard let data = data, let json = try? JSONSerialization.jsonObject(with: data, options: []) as? NSDictionary, let casesArray = json["Cases"] as? NSArray  else {
         return completion(.failure(CommunicatorError.invalidResponse))
@@ -330,6 +323,7 @@ public class Communicator {
     var successfullyDownloadedAll = true
     for (index, scan) in cCase.scans.enumerated() {
       taskGroup.enter()
+      // Check if the scan object has a href and fileType before attempting the download
       if let scanURL = scan.href, let scanType = scan.fileType {
         download(resource: scanURL) { data in
           let scanId: String = scan.id ?? String(index)
@@ -341,6 +335,36 @@ public class Communicator {
           } catch {
             successfullyDownloadedAll = false
             taskGroup.leave()
+          }
+        }
+      }
+    }
+    taskGroup.notify(queue: DispatchQueue.main, work: DispatchWorkItem(block: {
+      completion(successfullyDownloadedAll)
+    }))
+  }
+  
+  public func downloadColorizedScanOnly(ofCase cCase: CommunicateCase, toDirectoryURL path:URL,
+                                        completeOne: @escaping ()->(), completion: @escaping (Bool)->()) {
+    let taskGroup = DispatchGroup()
+    var successfullyDownloadedAll = true
+    for (index, scan) in cCase.scans.enumerated() {
+      taskGroup.enter()
+      // Check if the scan object has a href and fileType before attempting the download
+      if let scanURL = scan.href, let scanType = scan.fileType {
+        // Download ply file
+        if let scanExtension = scan.fileType, scanExtension == "dcm", let scanType = scan.jawType, scanType == "upper", let scanHash = scan.hash {
+          let plyURL = URL(string: baseMetadataURL + "/api/cases/" + cCase.id + "/attachments/" + scanHash + "/ply")!
+          download(resource: plyURL) { data in
+            let fileURL = path.appendingPathComponent(scanHash + ".ply")
+            do {
+              try data?.write(to: fileURL)
+              completeOne()
+              taskGroup.leave()
+            } catch {
+              successfullyDownloadedAll = false
+              taskGroup.leave()
+            }
           }
         }
       }
