@@ -348,23 +348,20 @@ public class Communicator {
                                         completeOne: @escaping ()->(), completion: @escaping (Bool)->()) {
     let taskGroup = DispatchGroup()
     var successfullyDownloadedAll = true
-    for (index, scan) in cCase.scans.enumerated() {
+    for (_, scan) in cCase.scans.enumerated() {
       taskGroup.enter()
-      // Check if the scan object has a href and fileType before attempting the download
-      if let scanURL = scan.href, let scanType = scan.fileType {
-        // Download ply file
-        if let scanExtension = scan.fileType, scanExtension == "dcm", let scanType = scan.jawType, scanType == "upper", let scanHash = scan.hash {
-          let plyURL = URL(string: baseMetadataURL + "/api/cases/" + cCase.id + "/attachments/" + scanHash + "/ply")!
-          download(resource: plyURL) { data in
-            let fileURL = path.appendingPathComponent(scanHash + ".ply")
-            do {
-              try data?.write(to: fileURL)
-              completeOne()
-              taskGroup.leave()
-            } catch {
-              successfullyDownloadedAll = false
-              taskGroup.leave()
-            }
+      // Download ply file
+      if let scanExtension = scan.fileType, scanExtension == "dcm", let scanType = scan.jawType, scanType == "upper", let scanHash = scan.hash {
+        let plyURL = URL(string: baseMetadataURL + "/api/cases/" + cCase.id + "/attachments/" + scanHash + "/ply")!
+        download(resource: plyURL) { data in
+          let fileURL = path.appendingPathComponent(scanHash + ".ply")
+          do {
+            try data?.write(to: fileURL)
+            completeOne()
+            taskGroup.leave()
+          } catch {
+            successfullyDownloadedAll = false
+            taskGroup.leave()
           }
         }
       }
