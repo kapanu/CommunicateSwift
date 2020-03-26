@@ -337,16 +337,30 @@ public class Communicator {
             taskGroup.leave()
           }
         }
-        
-        if let scanExtension = scan.fileType, scanExtension == "dcm", let scanType = scan.jawType, scanType == "upper", let scanHash = scan.hash {
-          let plyURL = URL(string: baseMetadataURL + "/api/cases/" + cCase.id + "/attachments/" + scanHash + "/ply")!
-          download(resource: plyURL) { data in
-            let fileURL = path.appendingPathComponent(scanHash + ".ply")
-            do {
-              try data?.write(to: fileURL)
-            } catch {
-              successfullyDownloadedAll = false
-            }
+      }
+    }
+    taskGroup.notify(queue: DispatchQueue.main, work: DispatchWorkItem(block: {
+      completion(successfullyDownloadedAll)
+    }))
+  }
+  
+  public func downloadColorizedScanOnly(ofCase cCase: CommunicateCase, toDirectoryURL path:URL,
+                                        completeOne: @escaping ()->(), completion: @escaping (Bool)->()) {
+    let taskGroup = DispatchGroup()
+    var successfullyDownloadedAll = true
+    for scan in cCase.scans {
+      // Download only the ply of the colorized scan
+      if let scanExtension = scan.fileType, scanExtension == "dcm", let scanType = scan.jawType, scanType == "upper", let scanHash = scan.hash {
+        taskGroup.enter()
+        let plyURL = URL(string: baseMetadataURL + "/api/cases/" + cCase.id + "/attachments/" + scanHash + "/ply")!
+        download(resource: plyURL) { data in
+          let fileURL = path.appendingPathComponent(scanHash + ".ply")
+          do {
+            try data?.write(to: fileURL)
+            taskGroup.leave()
+          } catch {
+            successfullyDownloadedAll = false
+            taskGroup.leave()
           }
         }
       }
