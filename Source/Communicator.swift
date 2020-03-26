@@ -228,7 +228,7 @@ public class Communicator {
   }
   
   /// Retireves all Cases that are available for the logged in user
-  public func retrieveCases(completion: @escaping (Result<[CommunicateCase], Error>)->()) {
+  public func retrieveCases(forIvosmile: Bool = false, completion: @escaping (Result<[CommunicateCase], Error>)->()) {
  
     var req = URLRequest(url: URL(string: baseMetadataURL + "/api/cases")!)
     req.addAccessTokenAuthorization()
@@ -240,7 +240,7 @@ public class Communicator {
         if resp.statusCode == 401 {
           self.signIn(vc: nil, completion: { status in
             if status == .signedIn {
-              self.retrieveCases(completion: completion)
+              self.retrieveCases(forIvosmile: forIvosmile, completion: completion)
             } else {
               completion(.failure(err))
             }
@@ -256,7 +256,13 @@ public class Communicator {
         do {
           let jsonData = try JSONSerialization.data(withJSONObject: `case`, options: [])
           let caseThreeshape = try jsonData.decodeCommunicateCase()
-          cases.append(caseThreeshape)
+          if (forIvosmile) {
+            if (caseThreeshape.scans.count > 0) {
+              cases.append(caseThreeshape)
+            }
+          } else {
+            cases.append(caseThreeshape)
+          }
         } catch {
           print("Unexpected error: \(error).")
         }
