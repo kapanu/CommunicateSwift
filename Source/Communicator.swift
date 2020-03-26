@@ -376,6 +376,50 @@ public class Communicator {
     }))
   }
   
+  public func downloadRestorationComponents(ofCase cCase: CommunicateCase, toDirectoryURL path:URL,
+                                            completeOne: @escaping ()->(), completion: @escaping (Bool)->()) {
+    let taskGroup = DispatchGroup()
+    var successfullyDownloadedAll = true
+    for scan in cCase.scans {
+      // Download only the ply of the colorized scan
+      if let scanExtension = scan.fileType, scanExtension == "dcm", let scanType = scan.jawType, scanType == "upper", let scanHash = scan.hash {
+        taskGroup.enter()
+        let plyURL = URL(string: baseMetadataURL + "/api/cases/" + cCase.id + "/attachments/" + scanHash + "/ply")!
+        download(resource: plyURL) { data in
+          let fileURL = path.appendingPathComponent(scanHash + ".ply")
+          do {
+            try data?.write(to: fileURL)
+            completeOne()
+            taskGroup.leave()
+          } catch {
+            successfullyDownloadedAll = false
+            taskGroup.leave()
+          }
+        }
+      }
+    }
+    for (index, design) in cCase.designs.enumerated() {
+      if let designURL = design.href, let designExtension = design.fileType, designExtension == "stl" {
+        taskGroup.enter()
+        download(resource: designURL) { data in
+          let designId: String = design.id ?? String(index)
+          let fileURL = path.appendingPathComponent(designId + "." + designExtension)
+          do {
+            try data?.write(to: fileURL)
+            completeOne()
+            taskGroup.leave()
+          } catch {
+            successfullyDownloadedAll = false
+            taskGroup.leave()
+          }
+        }
+      }
+    }
+    taskGroup.notify(queue: DispatchQueue.main, work: DispatchWorkItem(block: {
+      completion(successfullyDownloadedAll)
+    }))
+  }
+  
   public func downloadDesigns(ofCase cCase: CommunicateCase, toDirectoryURL path:URL,
                               completeOne: @escaping ()->(), completion: @escaping (Bool)->()) {
     let taskGroup = DispatchGroup()
