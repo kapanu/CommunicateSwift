@@ -382,7 +382,8 @@ public class Communicator {
     var successfullyDownloadedAll = true
     for scan in cCase.scans {
       // Download only the ply of the colorized scan
-      if let scanExtension = scan.fileType, scanExtension == "dcm", let scanType = scan.jawType, scanType == "upper", let scanHash = scan.hash {
+      if let scanExtension = scan.fileType, scanExtension == "dcm", let scanJawType = scan.jawType, scanJawType == "upper", let scanHash = scan.hash,
+        let scanType = scan.type, scanType == "Preparation" {
         taskGroup.enter()
         let plyURL = URL(string: baseMetadataURL + "/api/cases/" + cCase.id + "/attachments/" + scanHash + "/ply")!
         download(resource: plyURL) { data in
@@ -399,7 +400,7 @@ public class Communicator {
       }
     }
     for (index, design) in cCase.designs.enumerated() {
-      if let designURL = design.href, let designExtension = design.fileType, designExtension == "stl" {
+      if let designURL = design.href, let designExtension = design.fileType, designExtension == "stl", let designType = design.type, !designType.contains("DigitalModel") {
         taskGroup.enter()
         download(resource: designURL) { data in
           let designId: String = design.id ?? String(index)
@@ -407,6 +408,21 @@ public class Communicator {
           do {
             try data?.write(to: fileURL)
             completeOne()
+            taskGroup.leave()
+          } catch {
+            successfullyDownloadedAll = false
+            taskGroup.leave()
+          }
+        }
+      }
+    }
+    for attachment in cCase.attachments {
+      if attachment.fileType == "png", attachment.name.contains("original") {
+        taskGroup.enter()
+        download(resource: attachment.href) { data in
+          let fileURL = path.appendingPathComponent(attachment.name)
+          do {
+            try data?.write(to: fileURL)
             taskGroup.leave()
           } catch {
             successfullyDownloadedAll = false
