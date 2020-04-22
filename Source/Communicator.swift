@@ -417,7 +417,7 @@ public class Communicator {
       }
     }
     for attachment in cCase.attachments {
-      if attachment.fileType == "png", attachment.name.contains("original") {
+      if (attachment.fileType == "png" && attachment.name.contains("original")) || attachment.name.contains("RefToPrep") || attachment.name.contains("model.ply") {
         taskGroup.enter()
         download(resource: attachment.href) { data in
           let fileURL = path.appendingPathComponent(attachment.name)
