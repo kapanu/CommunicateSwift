@@ -376,6 +376,27 @@ public class Communicator {
     }))
   }
   
+  public func countRestorationComponents(ofCase cCase: CommunicateCase) -> Int {
+    var counter: Int = 0
+    for scan in cCase.scans {
+      if let scanExtension = scan.fileType, scanExtension == "dcm", let scanJawType = scan.jawType, scanJawType == "upper",
+      let scanType = scan.type, scanType == "Preparation" {
+        counter += 1
+      }
+    }
+    for design in cCase.designs {
+      if let _ = design.href, let designExtension = design.fileType, designExtension == "stl", let designType = design.type, !designType.contains("DigitalModel") {
+        counter += 1
+      }
+    }
+    for attachment in cCase.attachments {
+      if (attachment.fileType == "png" && attachment.name.contains("original")) || attachment.name.contains("RefToPrep") || attachment.name.contains("model.ply") {
+        counter += 1
+      }
+    }
+    return counter
+  }
+  
   public func downloadRestorationComponents(ofCase cCase: CommunicateCase, toDirectoryURL path:URL,
                                             completeOne: @escaping ()->(), completion: @escaping (Bool)->()) {
     let taskGroup = DispatchGroup()
