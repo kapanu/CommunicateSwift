@@ -113,36 +113,6 @@ public class Communicator {
     rootVC.present(navVC, animated: true)
   }
   
-  func determineMetadataURL() {
-    // try each URL and set as base URL if it works
-    guard baseMetadataURL == nil else { return }
-    for url in [europeMetadataURL, americaMetadataURL, asiaMetadataURL] {
-      var req = URLRequest(url: URL(string: url + "/api/cases")!)
-      req.addAccessTokenAuthorization()
-      req.httpMethod = "GET"
-      
-      let task = URLSession.shared.dataTask(with: req, completionHandler: { (data, response, error) in
-        if let err = error {
-          guard let resp = response as? HTTPURLResponse else { return }
-          if resp.statusCode == 401 {
-            self.signIn(vc: nil, completion: { status in
-              if status == .signedIn {
-                self.determineMetadataURL()
-              } else {
-                print(err.localizedDescription)
-              }
-            })
-          }
-        } else {
-          if self.baseMetadataURL == nil {
-            self.baseMetadataURL = url
-          }
-        }
-      })
-      task.resume()
-    }
-  }
-  
   func requestToken(authCode: String, completion: @escaping (CommunicateStatus)->()) {
     var req = URLRequest(url: Settings.shared.tokenRequestURL)
     req.addBasicAuthorization()
@@ -262,29 +232,36 @@ public class Communicator {
   
   /// Retireves all Cases that are available for the logged in user
   public func retrieveCases(completion: @escaping (Result<[CommunicateCase], Error>)->()) {
- 
-    var req = URLRequest(url: URL(string: baseMetadataURL ?? europeMetadataURL + "/api/cases")!)
+  var cases: [CommunicateCase] = []
+  var group = DispatchGroup()
+  for url in [europeMetadataURL, americaMetadataURL, asiaMetadataURL] {
+    group.enter()
+    var req = URLRequest(url: URL(string: url + "/api/cases")!)
     req.addAccessTokenAuthorization()
     req.httpMethod = "GET"
     
     let task = URLSession.shared.dataTask(with: req, completionHandler: { (data, response, error) in
+      defer {
+        group.leave()
+      }
       if let err = error {
         guard let resp = response as? HTTPURLResponse else { return }
         if resp.statusCode == 401 {
-          self.signIn(vc: nil, completion: { status in
-            if status == .signedIn {
-              self.retrieveCases(completion: completion)
-            } else {
-              completion(.failure(err))
-            }
-          })
+          DispatchQueue.main.async {
+            self.signIn(vc: nil, completion: { status in
+              if status == .signedIn {
+                self.retrieveCases(completion: completion)
+              } else {
+                completion(.failure(err))
+              }
+            })
+          }
         }
       }
       guard let data = data, let json = try? JSONSerialization.jsonObject(with: data, options: []) as? NSDictionary, let casesArray = json["Cases"] as? NSArray  else {
         return completion(.failure(CommunicatorError.invalidResponse))
       }
       
-      var cases: [CommunicateCase] = []
       for `case` in casesArray {
         do {
           let jsonData = try JSONSerialization.data(withJSONObject: `case`, options: [])
@@ -294,10 +271,13 @@ public class Communicator {
           print("Unexpected error: \(error).")
         }
       }
-      completion(.success(cases))
-
+      
     })
     task.resume()
+    }
+    group.notify(queue: DispatchQueue.main) {
+      completion(.success(cases))
+    }
   }
   
   public func downloadAttachments(ofCase cCase: CommunicateCase, toDirectoryURL path:URL, completion: @escaping (Bool)->()) {
@@ -417,8 +397,11 @@ public class Communicator {
   }
   
   public func exportMultipleFilesTo3Shape(fileURLs: [URL], patientFirstName: String = "Bernard", patientLastName: String = "O'Fancy", completion: @escaping (Bool, String) -> ()) {
+    
+    for url in [europeMetadataURL, americaMetadataURL, asiaMetadataURL] {
+
     // Step 1. Prepare post request url and authorization
-    let url = URL(string: baseMetadataURL ?? europeMetadataURL + "/api/cases?caseType=common")!
+    let url = URL(string: url + "/api/cases?caseType=common")!
     var request = URLRequest(url: url)
     request.addAccessTokenAuthorization()
     
@@ -483,11 +466,14 @@ public class Communicator {
       completion(true, "")
     }
     task.resume()
+    }
   }
   
   public func exportProjectTo3Shape(zippedProjectPath: URL, patientFirstName: String = "Esmeralda", patientLastName: String = "Chisme", completion: @escaping (Bool, String) -> ()) {
+    for url in [europeMetadataURL, americaMetadataURL, asiaMetadataURL] {
+
     // Step 1. Prepare post request url and authorization
-    let url = URL(string: baseMetadataURL ?? europeMetadataURL + "/api/cases?caseType=common")!
+    let url = URL(string: url + "/api/cases?caseType=common")!
     var request = URLRequest(url: url)
     request.addAccessTokenAuthorization()
     
@@ -545,6 +531,7 @@ public class Communicator {
       completion(true, "")
     }
     task.resume()
+    }
   }
 }
 
