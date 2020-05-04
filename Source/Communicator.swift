@@ -71,6 +71,10 @@ public class Communicator {
     }
   }
   
+  public var identityURL: URL {
+    return Settings.shared.identityURL
+  }
+  
   public var isSignedIn: Bool { return Settings.shared.isSignedIn }
   public var hasRefreshToken: Bool { return !Settings.shared.refreshToken.isEmpty }
 
@@ -90,7 +94,6 @@ public class Communicator {
   public func signIn(vc:UIViewController? = nil, completion: ((CommunicateStatus)->())? = nil) {
     authVC = AuthenticationViewController()
     if Settings.shared.isSignedIn {
-      //      print(Settings.shared.authenticationToken)
       completion?(.signedIn)
       return
     }
@@ -113,7 +116,12 @@ public class Communicator {
     rootVC.present(navVC, animated: true)
   }
   
-  func requestToken(authCode: String, completion: @escaping (CommunicateStatus)->()) {
+  var authenticationString: String {
+    let authValue = "\(Settings.shared.clientId):\(Settings.shared.clientSecret)"
+    return "Basic \(authValue.data(using: .utf8)!.base64EncodedString())"
+  }
+  
+  public func requestToken(authCode: String, completion: @escaping (CommunicateStatus)->()) {
     var req = URLRequest(url: Settings.shared.tokenRequestURL)
     req.addBasicAuthorization()
     req.httpBody = "grant_type=authorization_code&redirect_uri=\(Settings.shared.redirectionURI)&code=\(authCode)&scope=offline_access".data(using: .utf8)

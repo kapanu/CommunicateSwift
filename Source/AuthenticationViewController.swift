@@ -25,8 +25,7 @@ public class AuthenticationViewController: UIViewController {
     webview.leftAnchor.constraint(equalTo: view.leftAnchor).isActive = true
     webview.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
     webview.navigationDelegate = self
-    
-    webview.load(URLRequest(url: URL(string: "https://identity.3shape.com/connect/authorize?client_id=\(Settings.shared.clientId)&response_type=code&scope=offline_access&redirect_uri=\(Settings.shared.redirectionURI)")!))
+    webview.load(URLRequest(url: Settings.shared.identityURL))
   }
 }
 
@@ -34,9 +33,9 @@ extension AuthenticationViewController: WKNavigationDelegate {
   public func webView(_ webView: WKWebView, decidePolicyFor navigationAction: WKNavigationAction,
                decisionHandler: @escaping (WKNavigationActionPolicy) -> Void) {
     let requestDescription = navigationAction.request.description
-    if navigationAction.request.mainDocumentURL!.host!.contains("kapanu.com") {
+    if navigationAction.request.mainDocumentURL!.host! == URL(string: Settings.shared.redirectionURI)!.host! {
       decisionHandler(.cancel)
-      if let range = requestDescription.range(of: "http://3shapecommunicate.kapanu.com/?code=") {
+      if let range = requestDescription.range(of: Settings.shared.redirectionURI + "/?code=") {
         let authCode = String(requestDescription[range.upperBound...])
         let communicator = Communicator.shared
         communicator.requestToken(authCode: authCode) { status in
