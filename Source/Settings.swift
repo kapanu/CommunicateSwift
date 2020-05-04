@@ -29,6 +29,16 @@ class Settings {
     }
   }
   
+  var baseMetaDataURL: String {
+    set {
+      UserDefaults.standard.set(newValue, forKey: "CommunicateMetaDataURL")
+    }
+
+    get {
+      return UserDefaults.standard.string(forKey: "CommunicateMetaDataURL") ?? "https://eumetadata.3shapecommunicate.com"
+    }
+  }
+  
   var refreshToken: String {
     set {
       UserDefaults.standard.set(newValue, forKey: "CommunicateRefreshToken")

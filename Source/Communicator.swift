@@ -32,9 +32,7 @@ public enum CommunicatorError: Error {
 
 public class Communicator {
   public static let shared = Communicator()
-  
-  public var baseMetadataURL = "https://eumetadata.3shapecommunicate.com"
-  
+    
   private init() {}
   
   private struct CommunicateObservable {
@@ -89,6 +87,7 @@ public class Communicator {
     if Settings.shared.isSignedIn {
       //      print(Settings.shared.authenticationToken)
       completion?(.signedIn)
+      updateMetadataURL()
       return
     }
     var rootVC: UIViewController!
@@ -108,6 +107,21 @@ public class Communicator {
     
     authVC.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(dismissAuthenticationVC))
     rootVC.present(navVC, animated: true)
+  }
+  
+  public func updateMetadataURL() {
+    var req = URLRequest(url: URL(string: "https://eumetadata.3shapecommunicate.com/api/servers")!)
+    
+    req.addAccessTokenAuthorization()
+    
+    let task = URLSession.shared.dataTask(with: req, completionHandler: { (data, response, error) in
+      guard let data = data else { return }
+      guard let urls = try? JSONDecoder().decode([URL].self, from: data) else { return }
+      if let url = urls.first {
+        Settings.shared.baseMetaDataURL = url.absoluteString
+      }
+    })
+    task.resume()
   }
   
   func requestToken(authCode: String, completion: @escaping (CommunicateStatus)->()) {
@@ -133,6 +147,7 @@ public class Communicator {
           if let authenticationToken = json["access_token"] as? String, let validTime = json["expires_in"] as? Int,
             let refreshToken = json["refresh_token"] as? String {
             completion(.signedIn)
+            self.updateMetadataURL()
             Settings.shared.authenticationToken = authenticationToken
             Settings.shared.refreshToken = refreshToken
             Settings.shared.tokenExpiration = Date(timeIntervalSinceNow: Double(validTime))
@@ -230,7 +245,7 @@ public class Communicator {
   /// Retireves all Cases that are available for the logged in user
   public func retrieveCases(forIvosmile: Bool = false, completion: @escaping (Result<[CommunicateCase], Error>)->()) {
  
-    var req = URLRequest(url: URL(string: baseMetadataURL + "/api/cases")!)
+    var req = URLRequest(url: URL(string: Settings.shared.baseMetaDataURL + "/api/cases")!)
     req.addAccessTokenAuthorization()
     req.httpMethod = "GET"
     
@@ -358,7 +373,7 @@ public class Communicator {
       // Download only the ply of the colorized scan
       if let scanExtension = scan.fileType, scanExtension == "dcm", let scanType = scan.jawType, scanType == "upper", let scanHash = scan.hash {
         taskGroup.enter()
-        let plyURL = URL(string: baseMetadataURL + "/api/cases/" + cCase.id + "/attachments/" + scanHash + "/ply")!
+        let plyURL = URL(string: Settings.shared.baseMetaDataURL + "/api/cases/" + cCase.id + "/attachments/" + scanHash + "/ply")!
         download(resource: plyURL) { data in
           let fileURL = path.appendingPathComponent(scanHash + ".ply")
           do {
@@ -406,7 +421,7 @@ public class Communicator {
       if let scanExtension = scan.fileType, scanExtension == "dcm", let scanJawType = scan.jawType, scanJawType == "upper", let scanHash = scan.hash,
         let scanType = scan.type, scanType == "Preparation" {
         taskGroup.enter()
-        let plyURL = URL(string: baseMetadataURL + "/api/cases/" + cCase.id + "/attachments/" + scanHash + "/ply")!
+        let plyURL = URL(string: Settings.shared.baseMetaDataURL + "/api/cases/" + cCase.id + "/attachments/" + scanHash + "/ply")!
         download(resource: plyURL) { data in
           let fileURL = path.appendingPathComponent(scanHash + ".ply")
           do {
@@ -547,7 +562,7 @@ public class Communicator {
   
   public func exportMultipleFilesTo3Shape(fileURLs: [URL], patientFirstName: String = "Bernard", patientLastName: String = "O'Fancy", completion: @escaping (Bool, String) -> ()) {
     // Step 1. Prepare post request url and authorization
-    let url = URL(string: baseMetadataURL + "/api/cases?caseType=common")!
+    let url = URL(string: Settings.shared.baseMetaDataURL + "/api/cases?caseType=common")!
     var request = URLRequest(url: url)
     request.addAccessTokenAuthorization()
     
@@ -616,7 +631,7 @@ public class Communicator {
   
   public func exportProjectTo3Shape(zippedProjectPath: URL, patientFirstName: String = "Esmeralda", patientLastName: String = "Chisme", completion: @escaping (Bool, String) -> ()) {
     // Step 1. Prepare post request url and authorization
-    let url = URL(string: baseMetadataURL + "/api/cases?caseType=common")!
+    let url = URL(string: Settings.shared.baseMetaDataURL + "/api/cases?caseType=common")!
     var request = URLRequest(url: url)
     request.addAccessTokenAuthorization()
     
