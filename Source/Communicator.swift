@@ -244,8 +244,7 @@ public class Communicator {
   
   /// Retireves all Cases that are available for the logged in user
   public func retrieveCases(forIvosmile: Bool = false, completion: @escaping (Result<[CommunicateCase], Error>)->()) {
- 
-    var req = URLRequest(url: URL(string: Settings.shared.baseMetaDataURL + "/api/cases")!)
+    var req = URLRequest(url: URL(string: Settings.shared.baseMetaDataURL + "cases")!)
     req.addAccessTokenAuthorization()
     req.httpMethod = "GET"
     
@@ -373,7 +372,7 @@ public class Communicator {
       // Download only the ply of the colorized scan
       if let scanExtension = scan.fileType, scanExtension == "dcm", let scanType = scan.jawType, scanType == "upper", let scanHash = scan.hash {
         taskGroup.enter()
-        let plyURL = URL(string: Settings.shared.baseMetaDataURL + "/api/cases/" + cCase.id + "/attachments/" + scanHash + "/ply")!
+        let plyURL = URL(string: Settings.shared.baseMetaDataURL + "cases/" + cCase.id + "/attachments/" + scanHash + "/ply")!
         download(resource: plyURL) { data in
           let fileURL = path.appendingPathComponent(scanHash + ".ply")
           do {
@@ -421,7 +420,7 @@ public class Communicator {
       if let scanExtension = scan.fileType, scanExtension == "dcm", let scanJawType = scan.jawType, scanJawType == "upper", let scanHash = scan.hash,
         let scanType = scan.type, scanType == "Preparation" {
         taskGroup.enter()
-        let plyURL = URL(string: Settings.shared.baseMetaDataURL + "/api/cases/" + cCase.id + "/attachments/" + scanHash + "/ply")!
+        let plyURL = URL(string: Settings.shared.baseMetaDataURL + "cases/" + cCase.id + "/attachments/" + scanHash + "/ply")!
         download(resource: plyURL) { data in
           let fileURL = path.appendingPathComponent(scanHash + ".ply")
           do {
@@ -520,7 +519,7 @@ public class Communicator {
     task.resume()
   }
   
-  public func getConnectedUsers(completion: @escaping (Bool, String, [CommunicateConnection]) -> ()) {
+  public func getConnectedUsers(completion: @escaping (Bool, String, [CommunicateConnection], [String]) -> ()) {
     var req = URLRequest(url: URL(string: "https://users.3shapecommunicate.com/api/users/me")!)
     req.addAccessTokenAuthorization()
     req.httpMethod = "GET"
@@ -528,16 +527,16 @@ public class Communicator {
     let task = URLSession.shared.dataTask(with: req) {(data, response, error) in
       // check for fundamental networking error
       guard let response = response as? HTTPURLResponse, error == nil else {
-        completion(false, error?.localizedDescription ?? "Unknown error", [])
+        completion(false, error?.localizedDescription ?? "Unknown error", [], [])
         return
       }
       // check for http errors
       guard (200 ... 299) ~= response.statusCode else {
-        completion(false, response.description + ", status code: " + String(response.statusCode), [])
+        completion(false, response.description + ", status code: " + String(response.statusCode), [], [])
         return
       }
-      guard let data = data, let json = try? JSONSerialization.jsonObject(with: data, options: []) as? NSDictionary, let connectionsArray = json["Connections"] as? NSArray, let selfID = json["Id"] as? String else {
-        completion(false, "Data cannot be accessed", [])
+      guard let data = data, let json = try? JSONSerialization.jsonObject(with: data, options: []) as? NSDictionary, let connectionsArray = json["Connections"] as? NSArray, let selfID = json["Id"] as? String, let connectedUsersIdsArray = json["ConnectedUsers"] as? NSArray else {
+        completion(false, "Data cannot be accessed", [], [])
         return
       }
       var connections: [CommunicateConnection] = []
@@ -550,7 +549,11 @@ public class Communicator {
           print("Unexpected error: \(error).")
         }
       }
-      completion(true, selfID, connections)
+      if let connectedUsersIds = connectedUsersIdsArray as? [String] {
+        completion(true, selfID, connections, connectedUsersIds)
+      } else {
+        completion(false, "Could not convert connectedUsersIds", [], [])
+      }
     }
     task.resume()
   }
@@ -597,7 +600,7 @@ public class Communicator {
   
   public func exportMultipleFilesTo3Shape(fileURLs: [URL], metadata: [String: String], completion: @escaping (Bool, String) -> ()) {
     // Step 1. Prepare post request url and authorization
-    let url = URL(string: Settings.shared.baseMetaDataURL + "/api/cases?caseType=common")!
+    let url = URL(string: Settings.shared.baseMetaDataURL + "cases?caseType=common")!
     var request = URLRequest(url: url)
     request.addAccessTokenAuthorization()
     
@@ -608,15 +611,14 @@ public class Communicator {
     request.httpMethod = "POST"
     
     // Step 3. Prepare the data which will be put in the body of the request
-    let patientDictStr: String = "{\r\nPatientFirstName: \"" + "Bernard" + "\",\r\nPatientLastName: \"" + "Connor" + "\"\r\n}"
-//    var patientDictStr: String = "{\r\n"
-//    for (index, element) in metadata.enumerated() {
-//      if (index != metadata.count - 1) {
-//        patientDictStr += element.key + ": \"" + element.value + "\",\r\n"
-//      } else {
-//        patientDictStr += element.key + ": \"" + element.value + "\"\r\n}"
-//      }
-//    }
+    var patientDictStr: String = "{\r\n"
+    for (index, element) in metadata.enumerated() {
+      if (index != metadata.count - 1) {
+        patientDictStr += element.key + ": \"" + element.value + "\",\r\n"
+      } else {
+        patientDictStr += element.key + ": \"" + element.value + "\"\r\n}"
+      }
+    }
     var parameters: [String: Any] = ["model": patientDictStr]
     var dataObjects: [Data] = []
     do {
@@ -674,7 +676,7 @@ public class Communicator {
   
   public func exportProjectTo3Shape(zippedProjectPath: URL, patientFirstName: String = "Esmeralda", patientLastName: String = "Chisme", completion: @escaping (Bool, String) -> ()) {
     // Step 1. Prepare post request url and authorization
-    let url = URL(string: Settings.shared.baseMetaDataURL + "/api/cases?caseType=common")!
+    let url = URL(string: Settings.shared.baseMetaDataURL + "cases?caseType=common")!
     var request = URLRequest(url: url)
     request.addAccessTokenAuthorization()
     
