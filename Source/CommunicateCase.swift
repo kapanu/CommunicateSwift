@@ -197,7 +197,6 @@ public class CommunicateCase: Codable {
   public var model3D: String?
   public var actors: [Actor]
   public var attachments: [Attachment]
-  public var comments: [String]
   public var modelElements: [ModelElement]
   public var scans: [Scan]
   public var designs: [Design]
@@ -222,7 +221,6 @@ public class CommunicateCase: Codable {
     case model3D = "Model3D"
     case actors = "Actors"
     case attachments = "Attachments"
-    case comments = "Comments"
     case modelElements = "ModelElements"
     case scans = "Scans"
     case designs = "Designs"
