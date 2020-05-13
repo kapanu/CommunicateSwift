@@ -520,6 +520,41 @@ public class Communicator {
     task.resume()
   }
   
+  public func getConnectedUsers(completion: @escaping (Bool, String, [CommunicateConnection]) -> ()) {
+    var req = URLRequest(url: URL(string: "https://users.3shapecommunicate.com/api/users/me")!)
+    req.addAccessTokenAuthorization()
+    req.httpMethod = "GET"
+    
+    let task = URLSession.shared.dataTask(with: req) {(data, response, error) in
+      // check for fundamental networking error
+      guard let response = response as? HTTPURLResponse, error == nil else {
+        completion(false, error?.localizedDescription ?? "Unknown error", [])
+        return
+      }
+      // check for http errors
+      guard (200 ... 299) ~= response.statusCode else {
+        completion(false, response.description + ", status code: " + String(response.statusCode), [])
+        return
+      }
+      guard let data = data, let json = try? JSONSerialization.jsonObject(with: data, options: []) as? NSDictionary, let connectionsArray = json["Connections"] as? NSArray, let selfID = json["Id"] as? String else {
+        completion(false, "Data cannot be accessed", [])
+        return
+      }
+      var connections: [CommunicateConnection] = []
+      for connection in connectionsArray {
+        do {
+          let jsonData = try JSONSerialization.data(withJSONObject: connection, options: [])
+          let connectionThreeshape = try JSONDecoder().decode(CommunicateConnection.self, from: jsonData)
+          connections.append(connectionThreeshape)
+        } catch {
+          print("Unexpected error: \(error).")
+        }
+      }
+      completion(true, selfID, connections)
+    }
+    task.resume()
+  }
+  
   private func getHash(data : Data) -> String {
     let hash = data.withUnsafeBytes { (bytes: UnsafeRawBufferPointer) -> [UInt8] in
         var hash = [UInt8](repeating: 0, count: Int(CC_SHA1_DIGEST_LENGTH))
@@ -560,7 +595,7 @@ public class Communicator {
     task.resume()
   }
   
-  public func exportMultipleFilesTo3Shape(fileURLs: [URL], patientFirstName: String = "Bernard", patientLastName: String = "O'Fancy", completion: @escaping (Bool, String) -> ()) {
+  public func exportMultipleFilesTo3Shape(fileURLs: [URL], metadata: [String: String], completion: @escaping (Bool, String) -> ()) {
     // Step 1. Prepare post request url and authorization
     let url = URL(string: Settings.shared.baseMetaDataURL + "/api/cases?caseType=common")!
     var request = URLRequest(url: url)
@@ -573,7 +608,15 @@ public class Communicator {
     request.httpMethod = "POST"
     
     // Step 3. Prepare the data which will be put in the body of the request
-    let patientDictStr: String = "{\r\nPatientFirstName: \"" + patientFirstName + "\",\r\nPatientLastName: \"" + patientLastName + "\"\r\n}"
+    let patientDictStr: String = "{\r\nPatientFirstName: \"" + "Bernard" + "\",\r\nPatientLastName: \"" + "Connor" + "\"\r\n}"
+//    var patientDictStr: String = "{\r\n"
+//    for (index, element) in metadata.enumerated() {
+//      if (index != metadata.count - 1) {
+//        patientDictStr += element.key + ": \"" + element.value + "\",\r\n"
+//      } else {
+//        patientDictStr += element.key + ": \"" + element.value + "\"\r\n}"
+//      }
+//    }
     var parameters: [String: Any] = ["model": patientDictStr]
     var dataObjects: [Data] = []
     do {
