@@ -35,7 +35,7 @@ class Settings {
     }
 
     get {
-      return UserDefaults.standard.string(forKey: "CommunicateMetaDataURL") ?? "https://eumetadata.3shapecommunicate.com/api/"
+      return UserDefaults.standard.string(forKey: "CommunicateMetaDataURL") ?? ""
     }
   }
   

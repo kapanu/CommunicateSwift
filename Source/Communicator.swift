@@ -87,7 +87,6 @@ public class Communicator {
     if Settings.shared.isSignedIn {
       //      print(Settings.shared.authenticationToken)
       completion?(.signedIn)
-      updateMetadataURL()
       return
     }
     var rootVC: UIViewController!
@@ -109,7 +108,7 @@ public class Communicator {
     rootVC.present(navVC, animated: true)
   }
   
-  public func updateMetadataURL() {
+  public func updateMetadataURL(completion: (()->())? = nil) {
     var req = URLRequest(url: URL(string: "https://eumetadata.3shapecommunicate.com/api/servers")!)
     
     req.addAccessTokenAuthorization()
@@ -119,6 +118,7 @@ public class Communicator {
       guard let urls = try? JSONDecoder().decode([URL].self, from: data) else { return }
       if let url = urls.first {
         Settings.shared.baseMetaDataURL = url.absoluteString
+        completion?()
       }
     })
     task.resume()
@@ -147,7 +147,6 @@ public class Communicator {
           if let authenticationToken = json["access_token"] as? String, let validTime = json["expires_in"] as? Int,
             let refreshToken = json["refresh_token"] as? String {
             completion(.signedIn)
-            self.updateMetadataURL()
             Settings.shared.authenticationToken = authenticationToken
             Settings.shared.refreshToken = refreshToken
             Settings.shared.tokenExpiration = Date(timeIntervalSinceNow: Double(validTime))
