@@ -247,9 +247,10 @@ public class Communicator {
     task.resume()
   }
   
-  /// Retireves all Cases that are available for the logged in user
+  /// Retrieves all Cases that are available for the logged in user
   public func retrieveCases(forIvosmile: Bool = false, completion: @escaping (Result<[CommunicateCase], Error>)->()) {
-    var req = URLRequest(url: URL(string: Settings.shared.baseMetaDataURL + "cases")!)
+    // Change page number in the request to see older cases, e.g. cases?page=2
+    var req = URLRequest(url: URL(string: Settings.shared.baseMetaDataURL + "cases?page=0")!)
     req.addAccessTokenAuthorization()
     req.httpMethod = "GET"
     
@@ -280,7 +281,13 @@ public class Communicator {
               cases.append(caseThreeshape)
             }
           } else {
-            cases.append(caseThreeshape)
+            // heuristic to select Ortho cases: check if "TreatmentSimulation-IvoSmile.json" exists in the attachments
+            for attach in caseThreeshape.attachments {
+              if attach.name == "TreatmentSimulation-IvoSmile.json" {
+                cases.append(caseThreeshape)
+                break
+              }
+            }
           }
         } catch {
           print("Unexpected error: \(error).")
