@@ -611,141 +611,149 @@ public class Communicator {
   }
   
   public func exportMultipleFilesTo3Shape(fileURLs: [URL], metadata: [String: String], completion: @escaping (Bool, String) -> ()) {
-    // Step 1. Prepare post request url and authorization
-    let url = URL(string: Settings.shared.baseMetaDataURL + "cases?caseType=common")!
-    var request = URLRequest(url: url)
-    request.addAccessTokenAuthorization()
-    
-    // Step 2. Prepare post request header and set type as 'POST'
-    let makeRandom = { UInt32.random(in: (.min)...(.max)) }
-    let boundary = String(format: "------------------------%08X%08X", makeRandom(), makeRandom())
-    request.setValue("multipart/form-data; boundary=" + boundary, forHTTPHeaderField: "Content-Type")
-    request.httpMethod = "POST"
-    
-    // Step 3. Prepare the data which will be put in the body of the request
-    var patientDictStr: String = "{\r\n"
-    for (index, element) in metadata.enumerated() {
-      if (index != metadata.count - 1) {
-        patientDictStr += element.key + ": \"" + element.value + "\",\r\n"
-      } else {
-        patientDictStr += element.key + ": \"" + element.value + "\"\r\n}"
-      }
-    }
-    var parameters: [String: Any] = ["model": patientDictStr]
-    var dataObjects: [Data] = []
-    do {
-      for fileURL in fileURLs {
-        let data = try Data(contentsOf: fileURL)
-        dataObjects.append(data)
-      }
-    } catch {
-      completion(false, error.localizedDescription)
-      return
-    }
-    parameters["file"] = dataObjects
-    
-    // Step 4. Put the data in the request's body while wrapping it properly with the metadata information necessary for the post request
-    let httpBody = NSMutableData()
-    for (key, value) in parameters {
-      if (!httpBody.isEmpty) {
-        httpBody.append("\r\n".data(using: .utf8)!)
-      }
-      if (key == "file") {
-        for (i, val) in (value as! [Data]).enumerated() {
-          httpBody.append("--\(boundary)\r\n".data(using: .utf8)!)
-          httpBody.append("Content-Disposition: form-data; name=\"\(key)\"; filename=\"\(fileURLs[i].lastPathComponent)\"\r\n".data(using: .utf8)!)
-          httpBody.append("Content-Type: application/item3Dmodel\r\n\r\n".data(using: .utf8)!)
-          httpBody.append(val)
-          httpBody.append("\r\n".data(using:. utf8)!)
+    updateMetadataURL(success: { _ in
+      // Step 1. Prepare post request url and authorization
+      let url = URL(string: Settings.shared.baseMetaDataURL + "cases?caseType=common")!
+      var request = URLRequest(url: url)
+      request.addAccessTokenAuthorization()
+      
+      // Step 2. Prepare post request header and set type as 'POST'
+      let makeRandom = { UInt32.random(in: (.min)...(.max)) }
+      let boundary = String(format: "------------------------%08X%08X", makeRandom(), makeRandom())
+      request.setValue("multipart/form-data; boundary=" + boundary, forHTTPHeaderField: "Content-Type")
+      request.httpMethod = "POST"
+      
+      // Step 3. Prepare the data which will be put in the body of the request
+      var patientDictStr: String = "{\r\n"
+      for (index, element) in metadata.enumerated() {
+        if (index != metadata.count - 1) {
+          patientDictStr += element.key + ": \"" + element.value + "\",\r\n"
+        } else {
+          patientDictStr += element.key + ": \"" + element.value + "\"\r\n}"
         }
-      } else {
-        httpBody.append("--\(boundary)\r\n".data(using: .utf8)!)
-        httpBody.append("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n".data(using: .utf8)!)
-        httpBody.append("\(value)\r\n".data(using: .utf8)!)
       }
-    }
-    httpBody.append("--\(boundary)--\r\n".data(using: .utf8)!)
-    request.setValue(String(httpBody.length), forHTTPHeaderField: "Content-Length")
-    request.httpBody = httpBody as Data
-    
-    // Step 5. Send the post request and handle the possible responses
-    let task = URLSession.shared.dataTask(with: request) { data, response, error in
-      // check for fundamental networking error
-      guard let response = response as? HTTPURLResponse, error == nil else {
-        completion(false, error?.localizedDescription ?? "Unknown error")
+      var parameters: [String: Any] = ["model": patientDictStr]
+      var dataObjects: [Data] = []
+      do {
+        for fileURL in fileURLs {
+          let data = try Data(contentsOf: fileURL)
+          dataObjects.append(data)
+        }
+      } catch {
+        completion(false, error.localizedDescription)
         return
       }
-      // check for http errors
-      guard (200 ... 299) ~= response.statusCode else {
-        completion(false, response.description + ", status code: " + String(response.statusCode))
-        return
+      parameters["file"] = dataObjects
+      
+      // Step 4. Put the data in the request's body while wrapping it properly with the metadata information necessary for the post request
+      let httpBody = NSMutableData()
+      for (key, value) in parameters {
+        if (!httpBody.isEmpty) {
+          httpBody.append("\r\n".data(using: .utf8)!)
+        }
+        if (key == "file") {
+          for (i, val) in (value as! [Data]).enumerated() {
+            httpBody.append("--\(boundary)\r\n".data(using: .utf8)!)
+            httpBody.append("Content-Disposition: form-data; name=\"\(key)\"; filename=\"\(fileURLs[i].lastPathComponent)\"\r\n".data(using: .utf8)!)
+            httpBody.append("Content-Type: application/item3Dmodel\r\n\r\n".data(using: .utf8)!)
+            httpBody.append(val)
+            httpBody.append("\r\n".data(using:. utf8)!)
+          }
+        } else {
+          httpBody.append("--\(boundary)\r\n".data(using: .utf8)!)
+          httpBody.append("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n".data(using: .utf8)!)
+          httpBody.append("\(value)\r\n".data(using: .utf8)!)
+        }
       }
-      // the request looks to have been carried on succesfully
-      completion(true, "")
-    }
-    task.resume()
+      httpBody.append("--\(boundary)--\r\n".data(using: .utf8)!)
+      request.setValue(String(httpBody.length), forHTTPHeaderField: "Content-Length")
+      request.httpBody = httpBody as Data
+      
+      // Step 5. Send the post request and handle the possible responses
+      let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        // check for fundamental networking error
+        guard let response = response as? HTTPURLResponse, error == nil else {
+          completion(false, error?.localizedDescription ?? "Unknown error")
+          return
+        }
+        // check for http errors
+        guard (200 ... 299) ~= response.statusCode else {
+          completion(false, response.description + ", status code: " + String(response.statusCode))
+          return
+        }
+        // the request looks to have been carried on succesfully
+        completion(true, "")
+      }
+      task.resume()
+    }, failure: { (error) in
+      completion(false, error)
+    })
   }
   
   public func exportProjectTo3Shape(zippedProjectPath: URL, patientFirstName: String = "Esmeralda", patientLastName: String = "Chisme", completion: @escaping (Bool, String) -> ()) {
+    updateMetadataURL(success: { _ in
     // Step 1. Prepare post request url and authorization
-    let url = URL(string: Settings.shared.baseMetaDataURL + "cases?caseType=common")!
-    var request = URLRequest(url: url)
-    request.addAccessTokenAuthorization()
-    
-    // Step 2. Prepare post request header and set type as 'POST'
-    let makeRandom = { UInt32.random(in: (.min)...(.max)) }
-    let boundary = String(format: "------------------------%08X%08X", makeRandom(), makeRandom())
-    request.setValue("multipart/form-data; boundary=" + boundary, forHTTPHeaderField: "Content-Type")
-    request.httpMethod = "POST"
-    
-    // Step 3. Prepare the data which will be put in the body of the request
-    let patientDictStr: String = "{\r\nPatientFirstName: \"" + patientFirstName + "\",\r\nPatientLastName: \"" + patientLastName + "\"\r\n}"
-    var parameters: [String: Any] = ["model": patientDictStr]
-    do {
-      let data = try Data(contentsOf: zippedProjectPath)
-      parameters["file"] = data
-    } catch {
-      completion(false, error.localizedDescription)
-      return
-    }
-    
-    // Step 4. Put the data in the request's body while wrapping it properly with the metadata information necessary for the post request
-    let httpBody = NSMutableData()
-    for (key, value) in parameters {
-      if (!httpBody.isEmpty) {
-        httpBody.append("\r\n".data(using: .utf8)!)
-      }
-      httpBody.append("--\(boundary)\r\n".data(using: .utf8)!)
-      if (key == "file") {
-        httpBody.append("Content-Disposition: form-data; name=\"\(key)\"; filename=\"\(zippedProjectPath.lastPathComponent)\"\r\n".data(using: .utf8)!)
-        httpBody.append("Content-Type: application/item3Dmodel\r\n\r\n".data(using: .utf8)!)
-        httpBody.append(value as! Data)
-        httpBody.append("\r\n".data(using:. utf8)!)
-      } else {
-        httpBody.append("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n".data(using: .utf8)!)
-        httpBody.append("\(value)\r\n".data(using: .utf8)!)
-      }
-    }
-    httpBody.append("--\(boundary)--\r\n".data(using: .utf8)!)
-    request.setValue(String(httpBody.length), forHTTPHeaderField: "Content-Length")
-    request.httpBody = httpBody as Data
-    
-    // Step 5. Send the post request and handle the possible responses
-    let task = URLSession.shared.dataTask(with: request) { data, response, error in
-      // check for fundamental networking error
-      guard let response = response as? HTTPURLResponse, error == nil else {
-        completion(false, error?.localizedDescription ?? "Unknown error")
+      let url = URL(string: Settings.shared.baseMetaDataURL + "cases?caseType=common")!
+      var request = URLRequest(url: url)
+      request.addAccessTokenAuthorization()
+      
+      // Step 2. Prepare post request header and set type as 'POST'
+      let makeRandom = { UInt32.random(in: (.min)...(.max)) }
+      let boundary = String(format: "------------------------%08X%08X", makeRandom(), makeRandom())
+      request.setValue("multipart/form-data; boundary=" + boundary, forHTTPHeaderField: "Content-Type")
+      request.httpMethod = "POST"
+      
+      // Step 3. Prepare the data which will be put in the body of the request
+      let patientDictStr: String = "{\r\nPatientFirstName: \"" + patientFirstName + "\",\r\nPatientLastName: \"" + patientLastName + "\"\r\n}"
+      var parameters: [String: Any] = ["model": patientDictStr]
+      do {
+        let data = try Data(contentsOf: zippedProjectPath)
+        parameters["file"] = data
+      } catch {
+        completion(false, error.localizedDescription)
         return
       }
-      // check for http errors
-      guard (200 ... 299) ~= response.statusCode else {
-        completion(false, response.description + ", status code: " + String(response.statusCode))
-        return
+      
+      // Step 4. Put the data in the request's body while wrapping it properly with the metadata information necessary for the post request
+      let httpBody = NSMutableData()
+      for (key, value) in parameters {
+        if (!httpBody.isEmpty) {
+          httpBody.append("\r\n".data(using: .utf8)!)
+        }
+        httpBody.append("--\(boundary)\r\n".data(using: .utf8)!)
+        if (key == "file") {
+          httpBody.append("Content-Disposition: form-data; name=\"\(key)\"; filename=\"\(zippedProjectPath.lastPathComponent)\"\r\n".data(using: .utf8)!)
+          httpBody.append("Content-Type: application/item3Dmodel\r\n\r\n".data(using: .utf8)!)
+          httpBody.append(value as! Data)
+          httpBody.append("\r\n".data(using:. utf8)!)
+        } else {
+          httpBody.append("Content-Disposition: form-data; name=\"\(key)\"\r\n\r\n".data(using: .utf8)!)
+          httpBody.append("\(value)\r\n".data(using: .utf8)!)
+        }
       }
-      // the request looks to have been carried on succesfully
-      completion(true, "")
-    }
-    task.resume()
+      httpBody.append("--\(boundary)--\r\n".data(using: .utf8)!)
+      request.setValue(String(httpBody.length), forHTTPHeaderField: "Content-Length")
+      request.httpBody = httpBody as Data
+      
+      // Step 5. Send the post request and handle the possible responses
+      let task = URLSession.shared.dataTask(with: request) { data, response, error in
+        // check for fundamental networking error
+        guard let response = response as? HTTPURLResponse, error == nil else {
+          completion(false, error?.localizedDescription ?? "Unknown error")
+          return
+        }
+        // check for http errors
+        guard (200 ... 299) ~= response.statusCode else {
+          completion(false, response.description + ", status code: " + String(response.statusCode))
+          return
+        }
+        // the request looks to have been carried on succesfully
+        completion(true, "")
+      }
+      task.resume()
+    }, failure: { (error) in
+    completion(false, error)
+    })
   }
 }
 
