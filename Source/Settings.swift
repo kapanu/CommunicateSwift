@@ -33,7 +33,6 @@ class Settings {
     set {
       UserDefaults.standard.set(newValue, forKey: "CommunicateMetaDataURL")
     }
-
     get {
       return UserDefaults.standard.string(forKey: "CommunicateMetaDataURL") ?? ""
     }
