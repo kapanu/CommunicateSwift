@@ -416,7 +416,7 @@ public class Communicator {
       }
     }
     for attachment in cCase.attachments {
-      if (attachment.fileType == "png" && attachment.name.contains("original")) || attachment.name.contains("RefToPrep") || attachment.name.contains("model.ply") {
+      if (attachment.fileType == "png" && attachment.name.contains("original")) || attachment.name.contains("RefToPrep") || attachment.name.contains("model.ply") || (attachment.fileType == "xml" && attachment.name.contains("camera_params")) {
         counter += 1
       }
     }
@@ -464,7 +464,7 @@ public class Communicator {
       }
     }
     for attachment in cCase.attachments {
-      if (attachment.fileType == "png" && attachment.name.contains("original")) || attachment.name.contains("RefToPrep") || attachment.name.contains("model.ply") {
+      if (attachment.fileType == "png" && attachment.name.contains("original")) || attachment.name.contains("RefToPrep") || attachment.name.contains("model.ply") || (attachment.fileType == "xml" && attachment.name.contains("camera_params")){
         taskGroup.enter()
         download(resource: attachment.href) { data in
           let fileURL = path.appendingPathComponent(attachment.name)
