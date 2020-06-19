@@ -24,6 +24,9 @@
 		37F81E4322F8176400F00BED /* Communicate.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3722164C22B7E29100FBC6BB /* Communicate.framework */; };
 		37F81E4422F8176400F00BED /* Communicate.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 3722164C22B7E29100FBC6BB /* Communicate.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		A70BA066246AA49800EB18F0 /* CommunicateConnection.swift in Sources */ = {isa = PBXBuildFile; fileRef = A70BA065246AA49800EB18F0 /* CommunicateConnection.swift */; };
+		A7B29020249D0A9900516D4F /* Communicator+Downloads.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B2901F249D0A9900516D4F /* Communicator+Downloads.swift */; };
+		A7B29022249D0F1300516D4F /* Communicator+Extra.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B29021249D0F1300516D4F /* Communicator+Extra.swift */; };
+		A7B29023249D0F1300516D4F /* Communicator+Extra.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7B29021249D0F1300516D4F /* Communicator+Extra.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -78,6 +81,8 @@
 		37F81E3B22F8153800F00BED /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		37F81E3D22F8153800F00BED /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A70BA065246AA49800EB18F0 /* CommunicateConnection.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommunicateConnection.swift; sourceTree = "<group>"; };
+		A7B2901F249D0A9900516D4F /* Communicator+Downloads.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Communicator+Downloads.swift"; sourceTree = "<group>"; };
+		A7B29021249D0F1300516D4F /* Communicator+Extra.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Communicator+Extra.swift"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -147,6 +152,8 @@
 				3722165822B7E32400FBC6BB /* AuthenticationViewController.swift */,
 				3722165A22B7E33200FBC6BB /* Settings.swift */,
 				372D7C3122B8C3DA002B2321 /* Communicator.swift */,
+				A7B2901F249D0A9900516D4F /* Communicator+Downloads.swift */,
+				A7B29021249D0F1300516D4F /* Communicator+Extra.swift */,
 			);
 			path = Source;
 			sourceTree = "<group>";
@@ -328,12 +335,14 @@
 			files = (
 				372D7C5C22B9145C002B2321 /* CommunicateUser.swift in Sources */,
 				3704224222FD998800FE43D9 /* CommunicateCase.swift in Sources */,
+				A7B29020249D0A9900516D4F /* Communicator+Downloads.swift in Sources */,
 				37C0A142230FCC9B001E854D /* Data+Decode.swift in Sources */,
 				A70BA066246AA49800EB18F0 /* CommunicateConnection.swift in Sources */,
 				372D7C3222B8C3DA002B2321 /* Communicator.swift in Sources */,
 				3766244623053CDD001CBF94 /* CommunicateCaseModel.swift in Sources */,
 				3722165B22B7E33200FBC6BB /* Settings.swift in Sources */,
 				3722165922B7E32400FBC6BB /* AuthenticationViewController.swift in Sources */,
+				A7B29022249D0F1300516D4F /* Communicator+Extra.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -350,6 +359,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				37F81E3422F8153700F00BED /* ViewController.swift in Sources */,
+				A7B29023249D0F1300516D4F /* Communicator+Extra.swift in Sources */,
 				37F81E3222F8153700F00BED /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
