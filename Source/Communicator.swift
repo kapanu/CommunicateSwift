@@ -141,7 +141,7 @@ public class Communicator {
   func requestToken(authCode: String, completion: @escaping (CommunicateStatus)->()) {
     var req = URLRequest(url: Settings.shared.tokenRequestURL)
     req.addBasicAuthorization()
-    req.httpBody = "grant_type=authorization_code&redirect_uri=\(Settings.shared.redirectionURI)&code=\(authCode)&scope=offline_access".data(using: .utf8)
+    req.httpBody = "grant_type=authorization_code&redirect_uri=\(Settings.shared.redirectionURI)&code=\(authCode)&scope=openid+api+offline_access+communicate.connections.read_only+data.companies.read_only+data.users.read_only".data(using: .utf8)
     req.httpMethod = "POST"
     
     let task = URLSession.shared.dataTask(with: req, completionHandler: { (data, response, error) in

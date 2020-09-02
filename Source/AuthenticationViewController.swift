@@ -26,7 +26,8 @@ public class AuthenticationViewController: UIViewController {
     webview.rightAnchor.constraint(equalTo: view.rightAnchor).isActive = true
     webview.navigationDelegate = self
     
-    webview.load(URLRequest(url: URL(string: "https://identity.3shape.com/connect/authorize?client_id=\(Settings.shared.clientId)&response_type=code&scope=openid+api+offline_access+communicate.connections.read_only&redirect_uri=\(Settings.shared.redirectionURI)")!))
+    webview.load(URLRequest(url: URL(string: "https://identity.3shape.com/connect/authorize?client_id=\(Settings.shared.clientId)&response_type=code&scope=openid+api+offline_access+communicate.connections.read_only+data.companies.read_only+data.users.read_only&redirect_uri=\(Settings.shared.redirectionURI)")!))
+
   }
 }
 
