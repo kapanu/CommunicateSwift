@@ -216,8 +216,12 @@ public class Communicator {
             let jsonData = try JSONSerialization.data(withJSONObject: `case`, options: [])
             let caseThreeshape = try jsonData.decodeCommunicateCase()
             if (forIvosmile) {
-              if (caseThreeshape.scans.count > 0) {
-                cases.append(caseThreeshape)
+              let scansExist = caseThreeshape.scans.count > 0
+              for attach in caseThreeshape.attachments {
+                if (attach.name == "model.ply" && scansExist) {
+                  cases.append(caseThreeshape)
+                  break
+                }
               }
             } else {
               // heuristic to select Ortho cases: check if "TreatmentSimulation-IvoSmile.json" exists in the attachments
