@@ -185,64 +185,103 @@ public class Communicator {
     Settings.shared.tokenExpiration = Date()
   }
   
-  /// Retrieves all Cases that are available for the logged in user
-  public func retrieveCases(forIvosmile: Bool = false, completion: @escaping (Result<[CommunicateCase], Error>)->()) {
+  /// Retrieves last 10 cases by default that are available for the logged in user
+  public func retrieveCasesBasic(forIvosmile: Bool = false, completion: @escaping (Result<[CommunicateCase], Error>)->()) {
     updateMetadataURL(success: { _ in
-      // Change page number in the request to see older cases, e.g. cases?page=2
-      var req = URLRequest(url: URL(string: Settings.shared.baseMetaDataURL + "cases?page=0")!)
-      req.addAccessTokenAuthorization()
-      req.httpMethod = "GET"
-      
-      let task = URLSession.shared.dataTask(with: req, completionHandler: { (data, response, error) in
-        if let err = error {
-          guard let resp = response as? HTTPURLResponse else { return }
-          if resp.statusCode == 401 {
-            self.signIn(vc: nil, completion: { status in
-              if status == .signedIn {
-                self.retrieveCases(forIvosmile: forIvosmile, completion: completion)
-              } else {
-                completion(.failure(err))
-              }
-            })
-          }
-        }
-        guard let data = data, let json = try? JSONSerialization.jsonObject(with: data, options: []) as? NSDictionary, let casesArray = json["Cases"] as? NSArray  else {
-          return completion(.failure(CommunicatorError.invalidResponse))
-        }
-        
-        var cases: [CommunicateCase] = []
-        for `case` in casesArray {
-          do {
-            let jsonData = try JSONSerialization.data(withJSONObject: `case`, options: [])
-            let caseThreeshape = try jsonData.decodeCommunicateCase()
-            if (forIvosmile) {
-              let scansExist = caseThreeshape.scans.count > 0
-              for attach in caseThreeshape.attachments {
-                if (attach.name == "model.ply" && scansExist) {
-                  cases.append(caseThreeshape)
-                  break
-                }
-              }
-            } else {
-              // heuristic to select Ortho cases: check if "TreatmentSimulation-IvoSmile.json" exists in the attachments
-              for attach in caseThreeshape.attachments {
-                if attach.name == "TreatmentSimulation-IvoSmile.json" {
-                  cases.append(caseThreeshape)
-                  break
-                }
-              }
-            }
-          } catch {
-            print("Unexpected error: \(error).")
-          }
-        }
-        completion(.success(cases))
-
-      })
-      task.resume()
+      self.retrieveCasesInAPage(pageNumber: 0, forIvosmile: forIvosmile) { cases in
+        completion(cases)
+      }
     }, failure: { errorMessage in
       completion(.failure(UpdateMetadataError(errorMessage)))
     })
+  }
+  
+  /// Retrieves cases between a range of pages, cases that are available for the logged in user
+  public func retrieveCases(forIvosmile: Bool = false, fromPage: Int = 0, toPage: Int = 10, completion: @escaping (Result<[CommunicateCase], Error>)->()) {
+    updateMetadataURL(success: { _ in
+      // Change page number in the request to see older cases, e.g. cases?page=2
+      var pageNumber = fromPage
+      var cases: [CommunicateCase] = []
+
+      let group = DispatchGroup()
+      while pageNumber < toPage {
+        group.enter()
+
+        self.retrieveCasesInAPage(pageNumber: pageNumber, forIvosmile: forIvosmile) { pageCases in
+          switch pageCases {
+          case .success(let pageCases):
+            cases += pageCases
+
+            group.leave()
+          case .failure:
+            group.leave()
+          }
+        }
+
+        pageNumber += 1
+      }
+      group.notify(queue: DispatchQueue.main, work: DispatchWorkItem(block: {
+        // sort cases based on updated date
+        cases.sort(by: {$0.updatedOn > $1.updatedOn})
+        completion(.success(cases))
+      }))
+      
+    }, failure: { errorMessage in
+      completion(.failure(UpdateMetadataError(errorMessage)))
+    })
+  }
+  
+  private func retrieveCasesInAPage(pageNumber: Int = 0, forIvosmile: Bool = false, completion: @escaping (Result<[CommunicateCase], Error>)->()) {
+    var req = URLRequest(url: URL(string: Settings.shared.baseMetaDataURL + "cases?page=" + String(pageNumber))!)
+    req.addAccessTokenAuthorization()
+    req.httpMethod = "GET"
+    
+    let task = URLSession.shared.dataTask(with: req, completionHandler: { (data, response, error) in
+      if let err = error {
+        guard let resp = response as? HTTPURLResponse else { return }
+        if resp.statusCode == 401 {
+          self.signIn(vc: nil, completion: { status in
+            if status == .signedIn {
+              self.retrieveCasesInAPage(pageNumber: pageNumber, forIvosmile: forIvosmile, completion: completion)
+            } else {
+              completion(.failure(err))
+            }
+          })
+        }
+      }
+      guard let data = data, let json = try? JSONSerialization.jsonObject(with: data, options: []) as? NSDictionary, let casesArray = json["Cases"] as? NSArray  else {
+        return completion(.failure(CommunicatorError.invalidResponse))
+      }
+      
+      var cases: [CommunicateCase] = []
+      for `case` in casesArray {
+        do {
+          let jsonData = try JSONSerialization.data(withJSONObject: `case`, options: [])
+          let caseThreeshape = try jsonData.decodeCommunicateCase()
+          if (forIvosmile) {
+            let scansExist = caseThreeshape.scans.count > 0
+            for attach in caseThreeshape.attachments {
+              if (attach.name == "model.ply" && scansExist) {
+                cases.append(caseThreeshape)
+                break
+              }
+            }
+          } else {
+            // heuristic to select Ortho cases: check if "TreatmentSimulation-IvoSmile.json" exists in the attachments
+            for attach in caseThreeshape.attachments {
+              if attach.name == "TreatmentSimulation-IvoSmile.json" {
+                cases.append(caseThreeshape)
+                break
+              }
+            }
+          }
+        } catch {
+          print("Unexpected error: \(error).")
+        }
+      }
+      completion(.success(cases))
+    })
+    task.resume()
   }
   
   public func getConnectedUsers(completion: @escaping (Bool, String, [CommunicateConnection], [String]) -> ()) {
