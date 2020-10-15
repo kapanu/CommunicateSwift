@@ -13,6 +13,7 @@ public enum CommunicateStatus {
   case error
   case signedIn
   case signedOut
+  case cancelled
   case undefined
 }
 
@@ -30,10 +31,10 @@ public enum CommunicatorError: Error {
   case invalidResponse
 }
 
-public class Communicator {
+public class Communicator: NSObject {
   public static let shared = Communicator()
     
-  private init() {}
+  private override init() {}
   
   struct CommunicateObservable {
     weak var observer: CommunicateObserver?
@@ -86,6 +87,11 @@ public class Communicator {
   }
   private var authVC = AuthenticationViewController()
   
+  @objc func cancelAuthentication() {
+    dismissAuthenticationVC()
+    authVC.completionCallback?(.cancelled)
+  }
+  
   @objc func dismissAuthenticationVC() {
     authVC.dismiss(animated: true)
   }
@@ -111,8 +117,8 @@ public class Communicator {
     authVC.completionCallback = completion
     let navVC = UINavigationController(rootViewController: authVC)
     navVC.modalPresentationStyle = .formSheet
-    
-    authVC.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(dismissAuthenticationVC))
+    navVC.presentationController?.delegate = self
+    authVC.navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(cancelAuthentication))
     rootVC.present(navVC, animated: true)
   }
   
@@ -403,6 +409,12 @@ public class Communicator {
     })
   }
   
+}
+
+extension Communicator: UIAdaptivePresentationControllerDelegate {
+  public func presentationControllerDidDismiss(_ presentationController: UIPresentationController) {
+    cancelAuthentication()
+  }
 }
 
 extension URLRequest {
