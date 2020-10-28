@@ -15,6 +15,7 @@ public class CommunicateUser: Codable {
   public var Name: String
   public var FirstName: String
   public var LastName: String
+  public var Country: String
 }
 
 // Example
