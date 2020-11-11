@@ -123,25 +123,32 @@ public class Communicator: NSObject {
   }
   
   public func updateMetadataURL(success: ((String)->())? = nil, failure: ((String)->())? = nil) {
-    var req = URLRequest(url: URL(string: "https://eumetadata.3shapecommunicate.com/api/servers")!)
-    
-    req.addAccessTokenAuthorization()
-    
-    let task = URLSession.shared.dataTask(with: req, completionHandler: { (data, response, error) in
-      guard let data = data else {
-        failure?("Data not available")
-        return
+    refreshTokenIfNeeded { (status) in
+      switch status {
+      case .signedIn:
+        var req = URLRequest(url: URL(string: "https://eumetadata.3shapecommunicate.com/api/servers")!)
+        
+        req.addAccessTokenAuthorization()
+        
+        let task = URLSession.shared.dataTask(with: req, completionHandler: { (data, response, error) in
+          guard let data = data else {
+            failure?("Data not available")
+            return
+          }
+          guard let urls = try? JSONDecoder().decode([URL].self, from: data) else {
+            failure?("URLs not available")
+            return
+          }
+          if let url = urls.first {
+            Settings.shared.baseMetaDataURL = url.absoluteString
+            success?(url.absoluteString)
+          }
+        })
+        task.resume()
+      default:
+        failure?("Authotization needed.")
       }
-      guard let urls = try? JSONDecoder().decode([URL].self, from: data) else {
-        failure?("URLs not available")
-        return
-      }
-      if let url = urls.first {
-        Settings.shared.baseMetaDataURL = url.absoluteString
-        success?(url.absoluteString)
-      }
-    })
-    task.resume()
+    }
   }
   
   func requestToken(authCode: String, completion: @escaping (CommunicateStatus)->()) {

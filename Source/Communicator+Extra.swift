@@ -10,6 +10,13 @@ import CommonCrypto
 
 /// Not actively used functions by Kapanu apps.
 extension Communicator {
+  
+  public func refreshTokenIfNeeded(completion: @escaping (CommunicateStatus)->()) {
+    guard isSignedIn == false else { return completion(.signedIn) }
+    guard hasRefreshToken else { return completion(.signedOut) }
+    refreshToken(completion: completion)
+  }
+  
   public func refreshToken(completion: @escaping (CommunicateStatus)->()) {
     var req = URLRequest(url: Settings.shared.tokenRequestURL)
     
