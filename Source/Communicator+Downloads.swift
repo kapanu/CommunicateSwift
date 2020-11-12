@@ -6,6 +6,8 @@
 //  Copyright © 2020 Kapanu AG. All rights reserved.
 //
 
+import Foundation
+
 extension Communicator {
   public func download(resource: URL, completion: @escaping (Data?)->()) {
     var req = URLRequest(url:resource)
