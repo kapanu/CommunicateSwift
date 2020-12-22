@@ -53,12 +53,16 @@ extension Communicator {
   
   public func downloadRestorationComponents(ofCase cCase: CommunicateCase, toDirectoryURL path:URL,
                                             completeOne: @escaping ()->(), completion: @escaping (DownloadError?)->()) {
+    struct DownloadStatus {
+      var successfullyDownloadedAll: Bool
+      var isTimeoutError: Bool
+    }
+    var downloadStatus = DownloadStatus(successfullyDownloadedAll: true, isTimeoutError: false)
     let taskGroup = DispatchGroup()
-    var successfullyDownloadedAll = true
     let timeoutInterval: Double = 30
-    var isTimeoutError = false
+    
     for scan in cCase.scans {
-      if (isTimeoutError) { break }
+      if (downloadStatus.isTimeoutError) { break }
       // Download only the ply of the colorized scan
       if let scanExtension = scan.fileType, scanExtension == "dcm", let scanJawType = scan.jawType, scanJawType == "upper", let scanHash = scan.hash,
         let scanType = scan.type, scanType == "Preparation" {
@@ -71,15 +75,15 @@ extension Communicator {
             completeOne()
             taskGroup.leave()
           } catch {
-            successfullyDownloadedAll = false
+            downloadStatus.successfullyDownloadedAll = false
             taskGroup.leave()
           }
-          if (error == .timeout) { isTimeoutError = true }
+          if (error == .timeout) { downloadStatus.isTimeoutError = true }
         }
       }
     }
     for (index, design) in cCase.designs.enumerated() {
-      if (isTimeoutError) { break }
+      if (downloadStatus.isTimeoutError) { break }
       if let designURL = design.href, let designExtension = design.fileType, designExtension == "stl", let designType = design.type, !designType.contains("DigitalModel") {
         taskGroup.enter()
         download(resource: designURL, timeoutInterval: timeoutInterval) { data, error in
@@ -90,15 +94,15 @@ extension Communicator {
             completeOne()
             taskGroup.leave()
           } catch {
-            successfullyDownloadedAll = false
+            downloadStatus.successfullyDownloadedAll = false
             taskGroup.leave()
           }
-          if (error == .timeout) { isTimeoutError = true }
+          if (error == .timeout) { downloadStatus.isTimeoutError = true }
         }
       }
     }
     for attachment in cCase.attachments {
-      if (isTimeoutError) { break }
+      if (downloadStatus.isTimeoutError) { break }
       if ((attachment.fileType == "png" || attachment.fileType == "jpg") && attachment.name.contains("original")) || attachment.name.contains("RefToPrep") || attachment.name.contains("model.ply") ||
         (attachment.fileType == "xml" && (attachment.name.contains("camera_params") || attachment.name.contains("model_view_matrix"))) {
         taskGroup.enter()
@@ -108,17 +112,17 @@ extension Communicator {
             try data?.write(to: fileURL)
             taskGroup.leave()
           } catch {
-            successfullyDownloadedAll = false
+            downloadStatus.successfullyDownloadedAll = false
             taskGroup.leave()
           }
-          if (error == .timeout) { isTimeoutError = true }
+          if (error == .timeout) { downloadStatus.isTimeoutError = true }
         }
       }
     }
     taskGroup.notify(queue: DispatchQueue.main, work: DispatchWorkItem(block: {
-      if isTimeoutError {
+      if downloadStatus.isTimeoutError {
         completion(.timeout)
-      } else if successfullyDownloadedAll {
+      } else if downloadStatus.successfullyDownloadedAll {
         completion(nil)
       } else {
         completion(.failedFileDownload)
