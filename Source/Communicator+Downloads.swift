@@ -7,13 +7,24 @@
 //
 
 extension Communicator {
-  public func download(resource: URL, completion: @escaping (Data?)->()) {
-    var req = URLRequest(url:resource)
+  public enum DownloadError: Error {
+    case failedFileDownload
+    case timeout
+    case other
+  }
+  
+  public func download(resource: URL, timeoutInterval: Double? = nil, completion: @escaping (Data?, DownloadError?)->()) {
+    var req = URLRequest(url: resource)
     req.addAccessTokenAuthorization()
     req.httpMethod = "GET"
+    if let timeoutInterval = timeoutInterval { req.timeoutInterval = timeoutInterval }
     
     let task = URLSession.shared.dataTask(with: req) { (data, response, error) in
-      completion(data)
+      if let error = error, error._code == NSURLErrorTimedOut {
+        completion(data, .timeout)
+        return
+      }
+      completion(data, nil)
     }
     task.resume()
   }
@@ -41,16 +52,19 @@ extension Communicator {
   }
   
   public func downloadRestorationComponents(ofCase cCase: CommunicateCase, toDirectoryURL path:URL,
-                                            completeOne: @escaping ()->(), completion: @escaping (Bool)->()) {
+                                            completeOne: @escaping ()->(), completion: @escaping (DownloadError?)->()) {
     let taskGroup = DispatchGroup()
     var successfullyDownloadedAll = true
+    let timeoutInterval: Double = 30
+    var isTimeoutError = false
     for scan in cCase.scans {
+      if (isTimeoutError) { break }
       // Download only the ply of the colorized scan
       if let scanExtension = scan.fileType, scanExtension == "dcm", let scanJawType = scan.jawType, scanJawType == "upper", let scanHash = scan.hash,
         let scanType = scan.type, scanType == "Preparation" {
         taskGroup.enter()
         let plyURL = URL(string: Settings.shared.baseMetaDataURL + "cases/" + cCase.id + "/attachments/" + scanHash + "/ply")!
-        download(resource: plyURL) { data in
+        download(resource: plyURL, timeoutInterval: timeoutInterval) { data, error in
           let fileURL = path.appendingPathComponent(scanHash + ".ply")
           do {
             try data?.write(to: fileURL)
@@ -60,13 +74,15 @@ extension Communicator {
             successfullyDownloadedAll = false
             taskGroup.leave()
           }
+          if (error == .timeout) { isTimeoutError = true }
         }
       }
     }
     for (index, design) in cCase.designs.enumerated() {
+      if (isTimeoutError) { break }
       if let designURL = design.href, let designExtension = design.fileType, designExtension == "stl", let designType = design.type, !designType.contains("DigitalModel") {
         taskGroup.enter()
-        download(resource: designURL) { data in
+        download(resource: designURL, timeoutInterval: timeoutInterval) { data, error in
           let designId: String = design.id ?? String(index)
           let fileURL = path.appendingPathComponent(designId + "." + designExtension)
           do {
@@ -77,14 +93,16 @@ extension Communicator {
             successfullyDownloadedAll = false
             taskGroup.leave()
           }
+          if (error == .timeout) { isTimeoutError = true }
         }
       }
     }
     for attachment in cCase.attachments {
+      if (isTimeoutError) { break }
       if ((attachment.fileType == "png" || attachment.fileType == "jpg") && attachment.name.contains("original")) || attachment.name.contains("RefToPrep") || attachment.name.contains("model.ply") ||
         (attachment.fileType == "xml" && (attachment.name.contains("camera_params") || attachment.name.contains("model_view_matrix"))) {
         taskGroup.enter()
-        download(resource: attachment.href) { data in
+        download(resource: attachment.href) { data, error in
           let fileURL = path.appendingPathComponent(attachment.name)
           do {
             try data?.write(to: fileURL)
@@ -93,11 +111,18 @@ extension Communicator {
             successfullyDownloadedAll = false
             taskGroup.leave()
           }
+          if (error == .timeout) { isTimeoutError = true }
         }
       }
     }
     taskGroup.notify(queue: DispatchQueue.main, work: DispatchWorkItem(block: {
-      completion(successfullyDownloadedAll)
+      if isTimeoutError {
+        completion(.timeout)
+      } else if successfullyDownloadedAll {
+        completion(nil)
+      } else {
+        completion(.failedFileDownload)
+      }
     }))
   }
 }
@@ -109,7 +134,7 @@ extension Communicator {
     var successfullyDownloadedAll = true
     for attachement in cCase.attachments {
       taskGroup.enter()
-      download(resource: attachement.href) { data in
+      download(resource: attachement.href) { data, _ in
         // here the extension is added again though it's already appended to the name
         // let fileURL = path.appendingPathComponent(attachement.name).appendingPathExtension(attachement.fileType)
         let fileURL = path.appendingPathComponent(attachement.name)
@@ -136,7 +161,7 @@ extension Communicator {
     var successfullyDownloadedAll = true
     for attachement in cCase.attachments {
       taskGroup.enter()
-      download(resource: attachement.href) { data in
+      download(resource: attachement.href) { data, _ in
         // here the extension is added again though it's already appended to the name
         let fileURL = path.appendingPathComponent(attachement.name)
         do {
@@ -162,7 +187,7 @@ extension Communicator {
       taskGroup.enter()
       // Check if the scan object has a href and fileType before attempting the download
       if let scanURL = scan.href, let scanType = scan.fileType {
-        download(resource: scanURL) { data in
+        download(resource: scanURL) { data, _ in
           let scanId: String = scan.id ?? String(index)
           let fileURL = path.appendingPathComponent(scanId + "." + scanType)
           do {
@@ -190,7 +215,7 @@ extension Communicator {
       if let scanExtension = scan.fileType, scanExtension == "dcm", let scanType = scan.jawType, scanType == "upper", let scanHash = scan.hash {
         taskGroup.enter()
         let plyURL = URL(string: Settings.shared.baseMetaDataURL + "cases/" + cCase.id + "/attachments/" + scanHash + "/ply")!
-        download(resource: plyURL) { data in
+        download(resource: plyURL) { data, _ in
           let fileURL = path.appendingPathComponent(scanHash + ".ply")
           do {
             try data?.write(to: fileURL)
@@ -214,7 +239,7 @@ extension Communicator {
     for (index, design) in cCase.designs.enumerated() {
       taskGroup.enter()
       if let designURL = design.href, let designType = design.fileType {
-        download(resource: designURL) { data in
+        download(resource: designURL) { data, _ in
           let designId: String = design.id ?? String(index)
           let fileURL = path.appendingPathComponent(designId + "." + designType)
           do {
@@ -230,6 +255,42 @@ extension Communicator {
     }
     taskGroup.notify(queue: DispatchQueue.main, work: DispatchWorkItem(block: {
       completion(successfullyDownloadedAll)
+    }))
+  }
+  
+  public func downloadTestTimeout(ofCase cCase: CommunicateCase, toDirectoryURL path:URL,
+                                  completeOne: @escaping ()->(), completion: @escaping (DownloadError?)->()) {
+    let taskGroup = DispatchGroup()
+    taskGroup.enter()
+    let urlTest = URL(string: "https://httpstat.us/200?sleep=5000")!
+    var req = URLRequest(url: urlTest)
+    req.httpMethod = "GET"
+    req.timeoutInterval = 4
+    var errorTimeout = false
+    let task = URLSession.shared.dataTask(with: req) { (data, response, error) in
+      // check for http errors
+      if let response = response as? HTTPURLResponse {
+        print(">>> Response: " + response.description + ", status code: " + String(response.statusCode))
+      }
+      if let data = data {
+        print(">>> Data: " + String(data: data, encoding: .utf8)!)
+      } else {
+        print(">>> Something went wrong!")
+      }
+      if let error = error, error._code == NSURLErrorTimedOut {
+        print(">>> Request timeout!")
+        errorTimeout = true
+      }
+      taskGroup.leave()
+    }
+    task.resume()
+    
+    taskGroup.notify(queue: DispatchQueue.main, work: DispatchWorkItem(block: {
+      if errorTimeout {
+        completion(.timeout)
+      } else {
+        completion(.other)
+      }
     }))
   }
   
