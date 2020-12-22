@@ -7,6 +7,7 @@
 //
 
 import CommonCrypto
+import Foundation
 
 /// Not actively used functions by Kapanu apps.
 extension Communicator {

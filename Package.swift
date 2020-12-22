@@ -4,25 +4,25 @@
 import PackageDescription
 
 let package = Package(
-    name: "CommunicateKit",
+    name: "Communicate",
     platforms: [
         .iOS(.v10),
     ],
     products: [
         // Products define the executables and libraries produced by a package, and make them visible to other packages.
         .library(
-            name: "CommunicateKit",
-            targets: ["CommunicateKit"]),
+            name: "Communicate",
+            targets: ["Communicate"]),
     ],
     dependencies: [],
     targets: [
         .target(
-            name: "CommunicateKit",
+            name: "Communicate",
             dependencies: [],
             path: "Source"),
         .testTarget(
-            name: "CommunicateKitTests",
-            dependencies: ["CommunicateKit"],
+            name: "CommunicateTests",
+            dependencies: ["Communicate"],
             path: "CommunicateTests"),
     ]
 )

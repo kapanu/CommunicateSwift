@@ -6,6 +6,8 @@
 //  Copyright © 2020 Kapanu AG. All rights reserved.
 //
 
+import Foundation
+
 extension Communicator {
   public enum DownloadError: Error {
     case failedFileDownload
