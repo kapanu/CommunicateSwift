@@ -121,6 +121,7 @@ extension Communicator {
         completion(caseModel)
       } catch {
         print("Unexpected error: \(error.localizedDescription).")
+        completion(nil)
         return
       }
     })
