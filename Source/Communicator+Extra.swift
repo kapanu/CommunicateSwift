@@ -103,9 +103,6 @@ extension Communicator {
       return
     }
     var req = URLRequest(url: caseModelAttachement.href)
-    // TODO: remove debug messages in a later commit
-    print("--- caseModelAttachement.name: ", caseModelAttachement.name)
-    print("--- getCaseModel: caseModelAttachement.href = ", caseModelAttachement.href.absoluteString)
     req.addAccessTokenAuthorization()
     req.httpMethod = "GET"
     
