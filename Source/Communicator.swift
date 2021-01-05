@@ -29,6 +29,9 @@ extension CommunicateObserver {
 
 public enum CommunicatorError: Error {
   case invalidResponse
+  case oldCase
+  case signIn
+  case updateMetadataError(String)
 }
 
 public class Communicator: NSObject {
@@ -199,13 +202,18 @@ public class Communicator: NSObject {
   }
   
   /// Retrieves last 10 cases by default that are available for the logged in user
-  public func retrieveCasesBasic(forIvosmile: Bool = false, completion: @escaping (Result<[CommunicateCase], Error>)->()) {
+  public func retrieveCasesBasic(forIvosmile: Bool = false, completion: @escaping (Result<[CommunicateCase], CommunicatorError>)->()) {
     updateMetadataURL(success: { _ in
       self.retrieveCasesInAPage(pageNumber: 0, forIvosmile: forIvosmile) { cases in
-        completion(cases)
+        switch cases {
+        case .success(let pageCases):
+          completion(.success(pageCases))
+        case .failure(let error):
+          completion(.failure(error))
+        }
       }
     }, failure: { errorMessage in
-      completion(.failure(UpdateMetadataError(errorMessage)))
+      completion(.failure(.updateMetadataError(errorMessage)))
     })
   }
   
@@ -244,30 +252,65 @@ public class Communicator: NSObject {
     })
   }
   
-  private func retrieveCasesInAPage(pageNumber: Int = 0, forIvosmile: Bool = false, completion: @escaping (Result<[CommunicateCase], Error>)->()) {
+  /// Similar to retrieveCases function but adapted more for Kirkwood/Ortho
+  public func retrieveCasesOrtho(completion: @escaping (Result<[CommunicateCase], Error>)->()) {
+    updateMetadataURL(success: { _ in
+      var pageNumber = 0
+      var isOlderThanAMonth = false
+      var cases: [CommunicateCase] = []
+      let session = URLSession(configuration: .default)
+      let group = DispatchGroup()
+      while (cases.count < 20 && !isOlderThanAMonth) {
+        group.enter()
+        DispatchQueue.global(qos: .default).async {
+          self.retrieveCasesInAPage(session: session, pageNumber: pageNumber, forIvosmile: false) { pageCases in
+            switch pageCases {
+            case .success(let pageCases):
+              cases += pageCases
+              group.leave()
+            case .failure(.oldCase):
+              isOlderThanAMonth = true
+              group.leave()
+            default:
+              group.leave()
+            }
+          }
+        }
+        group.wait()
+        pageNumber += 1
+      }
+      cases.sort(by: {$0.updatedOn > $1.updatedOn})
+      completion(.success(cases))
+      
+    }, failure: { errorMessage in
+      completion(.failure(UpdateMetadataError(errorMessage)))
+    })
+  }
+  
+  private func retrieveCasesInAPage(session: URLSession? = nil, pageNumber: Int = 0, forIvosmile: Bool = false, completion: @escaping (Result<[CommunicateCase], CommunicatorError>)->()) {
     var req = URLRequest(url: URL(string: Settings.shared.baseMetaDataURL + "cases?page=" + String(pageNumber))!)
     req.addAccessTokenAuthorization()
     req.httpMethod = "GET"
     
-    let task = URLSession.shared.dataTask(with: req, completionHandler: { (data, response, error) in
-      if let err = error {
+    (session ?? URLSession.shared).dataTask(with: req, completionHandler: { (data, response, error) in
+      if let _ = error {
         guard let resp = response as? HTTPURLResponse else { return }
         if resp.statusCode == 401 {
           self.signIn(vc: nil, completion: { status in
             if status == .signedIn {
               self.retrieveCasesInAPage(pageNumber: pageNumber, forIvosmile: forIvosmile, completion: completion)
             } else {
-              completion(.failure(err))
+              completion(.failure(.signIn))
             }
           })
         }
       }
       guard let data = data, let json = try? JSONSerialization.jsonObject(with: data, options: []) as? NSDictionary, let casesArray = json["Cases"] as? NSArray  else {
-        return completion(.failure(CommunicatorError.invalidResponse))
+        return completion(.failure(.invalidResponse))
       }
       
       var cases: [CommunicateCase] = []
-      for `case` in casesArray {
+      for (index, `case`) in casesArray.enumerated() {
         do {
           let jsonData = try JSONSerialization.data(withJSONObject: `case`, options: [])
           let caseThreeshape = try jsonData.decodeCommunicateCase()
@@ -280,6 +323,10 @@ public class Communicator: NSObject {
               }
             }
           } else {
+            // Note: 31 * 24 * 3600 represents the time in seconds for a month
+            if (index == 0 && caseThreeshape.updatedOn.addingTimeInterval(31 * 24 * 3600) < Date()) {
+              return completion(.failure(.oldCase))
+            }
             // heuristic to select Ortho cases: check if "TreatmentSimulation-IvoSmile.json" exists in the attachments
             for attach in caseThreeshape.attachments {
               if attach.name == "TreatmentSimulation-IvoSmile.json" {
@@ -293,8 +340,7 @@ public class Communicator: NSObject {
         }
       }
       completion(.success(cases))
-    })
-    task.resume()
+    }).resume()
   }
   
   public func getConnectedUsers(completion: @escaping (Bool, String, [CommunicateConnection], [String]) -> ()) {
