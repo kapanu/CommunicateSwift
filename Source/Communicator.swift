@@ -257,10 +257,11 @@ public class Communicator: NSObject {
     updateMetadataURL(success: { _ in
       var pageNumber = 0
       var isOlderThanAMonth = false
+      var connectionErrorHappened = false
       var cases: [CommunicateCase] = []
       let session = URLSession(configuration: .default)
       let group = DispatchGroup()
-      while (cases.count < 20 && !isOlderThanAMonth) {
+      while (cases.count < 20 && !isOlderThanAMonth && !connectionErrorHappened) {
         group.enter()
         DispatchQueue.global(qos: .default).async {
           self.retrieveCasesInAPage(session: session, pageNumber: pageNumber, forIvosmile: false) { pageCases in
@@ -271,7 +272,8 @@ public class Communicator: NSObject {
             case .failure(.oldCase):
               isOlderThanAMonth = true
               group.leave()
-            default:
+            case .failure:
+              connectionErrorHappened = true
               group.leave()
             }
           }
@@ -300,7 +302,7 @@ public class Communicator: NSObject {
             if status == .signedIn {
               self.retrieveCasesInAPage(pageNumber: pageNumber, forIvosmile: forIvosmile, completion: completion)
             } else {
-              completion(.failure(.signIn))
+              return completion(.failure(.signIn))
             }
           })
         }
