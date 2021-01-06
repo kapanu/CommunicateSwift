@@ -31,6 +31,7 @@ public enum CommunicatorError: Error {
   case invalidResponse
   case oldCase
   case signIn
+  case noCasesInPage
   case updateMetadataError(String)
 }
 
@@ -256,26 +257,26 @@ public class Communicator: NSObject {
   public func retrieveCasesOrtho(completion: @escaping (Result<[CommunicateCase], Error>)->()) {
     updateMetadataURL(success: { _ in
       var pageNumber = 0
-      var isOlderThanAMonth = false
-      var isPageEmpty = false
-      var connectionErrorHappened = false
+      var commError: CommunicatorError! = nil
       var cases: [CommunicateCase] = []
       let session = URLSession(configuration: .default)
       let group = DispatchGroup()
-      while (cases.count < 20 && !isOlderThanAMonth && !connectionErrorHappened && !isPageEmpty) {
+      while (cases.count < 20 && commError == nil) {
         group.enter()
         DispatchQueue.global(qos: .default).async {
           self.retrieveCasesInAPage(session: session, pageNumber: pageNumber, forIvosmile: false) { pageCases in
             switch pageCases {
             case .success(let pageCases):
               cases += pageCases
-              isPageEmpty = (pageCases.count == 0)
               group.leave()
             case .failure(.oldCase):
-              isOlderThanAMonth = true
+              commError = .oldCase
               group.leave()
-            case .failure:
-              connectionErrorHappened = true
+            case .failure(.noCasesInPage):
+              commError = .noCasesInPage
+              group.leave()
+            case .failure(let err):
+              commError = err
               group.leave()
             }
           }
@@ -314,6 +315,9 @@ public class Communicator: NSObject {
       }
       
       var cases: [CommunicateCase] = []
+      if (casesArray.count == 0) {
+        return completion(.failure(.noCasesInPage))
+      }
       for (index, `case`) in casesArray.enumerated() {
         do {
           let jsonData = try JSONSerialization.data(withJSONObject: `case`, options: [])
